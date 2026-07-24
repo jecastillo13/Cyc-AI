@@ -25,22 +25,22 @@ class WorkoutAnalyzer:
 
         for r in registros:
 
-            if "distance" in r:
+            if r.get("distance") is not None:
                 distancia = max(distancia, r["distance"])
 
-            if "timestamp" in r:
+            if r.get("timestamp") is not None:
                 tiempo += 1
 
-            if "power" in r:
+            if r.get("power") is not None:
                 potencia.append(r["power"])
 
-            if "heart_rate" in r:
+            if r.get("heart_rate") is not None:
                 pulso.append(r["heart_rate"])
 
-            if "cadence" in r:
+            if r.get("cadence") is not None:
                 cadencia.append(r["cadence"])
 
-            if "speed" in r:
+            if r.get("speed") is not None:
                 velocidad.append(r["speed"])
 
         return {
