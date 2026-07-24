@@ -15,3 +15,7 @@ class Workout:
 
     avg_speed: float | None
     avg_cadence: float | None
+
+    tss: float | None = None
+    intensity_factor: float | None = None
+    energy: float | None = None

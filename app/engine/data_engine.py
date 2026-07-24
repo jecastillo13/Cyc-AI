@@ -2,8 +2,14 @@ from app.models.athlete import Athlete
 from app.models.workout import Workout
 from app.models.athlete_context import AthleteContext
 
+from app.physiology.training_load import TrainingLoad
+
 
 class DataEngine:
+
+    def __init__(self):
+
+        self.training_load = TrainingLoad()
 
     def build(self, profile, summary, history, metrics):
 
@@ -12,7 +18,9 @@ class DataEngine:
             weight=profile["weight"],
             height=profile["height"],
             ftp=profile["ftp"],
-            birth_date=profile["birth_date"]
+            birth_date=profile["birth_date"],
+            max_hr=profile["max_hr"],
+            resting_hr=profile["resting_hr"]
         )
 
         workout = Workout(
@@ -26,9 +34,15 @@ class DataEngine:
             avg_cadence=summary["cadencia_media"]
         )
 
+        training_load = self.training_load.calculate(
+            athlete,
+            workout
+        )
+
         context = AthleteContext(
             athlete=athlete,
             workout=workout,
+            training_load=training_load,
             history=history,
             metrics=metrics
         )

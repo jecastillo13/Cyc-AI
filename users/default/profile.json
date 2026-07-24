@@ -1,7 +1,9 @@
 {
-    "name": "default",
-    "weight": null,
-    "height": null,
-    "ftp": null,
-    "birth_date": null
+    "name": "Default User",
+    "weight": 75,
+    "height": 175,
+    "ftp": 250,
+    "birth_date": "1990-01-01",
+    "max_hr": 190,
+    "resting_hr": 55
 }

@@ -13,8 +13,15 @@ class Coach:
 
     def analyze(self):
 
+        # Información del entrenamiento
         workout = self.context.workout
 
+        # Información fisiológica
+        training_load = self.context.training_load
+
+        # Por ahora el clasificador sigue utilizando un diccionario.
+        # Más adelante lo modificaremos para que trabaje directamente
+        # con el objeto Workout.
         summary = {
             "distancia_km": workout.distance_km,
             "fc_media": workout.avg_hr
@@ -26,5 +33,11 @@ class Coach:
 
         return {
             "tipo_entrenamiento": workout_type,
-            "recomendacion": recommendation
+            "recomendacion": recommendation,
+            "training_load": {
+                "method": training_load.method,
+                "value": training_load.value,
+                "confidence": training_load.confidence,
+                "notes": training_load.notes
+            }
         }
