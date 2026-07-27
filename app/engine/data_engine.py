@@ -1,3 +1,5 @@
+from app.analytics.workout_history_analyzer import WorkoutHistoryAnalyzer
+
 from app.models.athlete import Athlete
 from app.models.workout import Workout
 from app.models.athlete_context import AthleteContext
@@ -6,10 +8,15 @@ from app.physiology.training_load import TrainingLoad
 
 
 class DataEngine:
+    """
+    Construye el contexto completo del atleta a partir de los datos
+    del entrenamiento, el perfil y el historial.
+    """
 
     def __init__(self):
 
         self.training_load = TrainingLoad()
+        self.history_analyzer = WorkoutHistoryAnalyzer()
 
     def build(self, profile, summary, history, metrics):
 
@@ -39,11 +46,13 @@ class DataEngine:
             workout
         )
 
+        history_summary = self.history_analyzer.analyze(history)
+
         context = AthleteContext(
             athlete=athlete,
             workout=workout,
             training_load=training_load,
-            history=history,
+            history_summary=history_summary,
             metrics=metrics
         )
 

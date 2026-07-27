@@ -43,7 +43,7 @@ class TrainingService:
             lector = FitReader(ruta_fit)
             registros = lector.read()
 
-            # Resumen
+            # Resumen del entrenamiento
             analizador = WorkoutAnalyzer(registros)
             resumen = analizador.summary()
 
@@ -58,7 +58,7 @@ class TrainingService:
             # Perfil
             perfil = usuario.get_profile()
 
-            # Contexto
+            # Construcción del contexto
             engine = DataEngine()
 
             contexto = engine.build(
@@ -77,7 +77,17 @@ class TrainingService:
                 "perfil": perfil,
                 "resumen": resumen,
                 "coach": analisis,
-                "historial": historial_info,
+                "history_summary": {
+                    "total_workouts": contexto.history_summary.total_workouts,
+                    "workouts_last_7_days": contexto.history_summary.workouts_last_7_days,
+                    "workouts_last_28_days": contexto.history_summary.workouts_last_28_days,
+                    "distance_last_7_days": contexto.history_summary.distance_last_7_days,
+                    "distance_last_28_days": contexto.history_summary.distance_last_28_days,
+                    "duration_last_7_days": contexto.history_summary.duration_last_7_days,
+                    "duration_last_28_days": contexto.history_summary.duration_last_28_days,
+                    "average_distance": contexto.history_summary.average_distance,
+                    "average_duration": contexto.history_summary.average_duration
+                },
                 "metricas": metricas_info
             }
 
