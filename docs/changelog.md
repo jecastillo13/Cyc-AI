@@ -43,3 +43,21 @@ Todas las modificaciones importantes del proyecto se documentan aquí.
 - TRIMPCalculator
 - Selección automática de TrainingLoad (TSS/TRIMP)
 - Primer algoritmo fisiológico implementado
+
+# Changelog
+
+## Sprint 4 - History Summary
+
+### Added
+
+- Nuevo modelo `HistorySummary`.
+- Nuevo analizador `WorkoutHistoryAnalyzer`.
+- Integración del historial en `AthleteContext`.
+- `WorkoutHistory` ahora devuelve un `DataFrame`.
+- `DataEngine` genera automáticamente el resumen del historial.
+- `TrainingService` expone `history_summary` en la respuesta de la API.
+
+### Improved
+
+- Eliminada la dependencia del diccionario de historial dentro del núcleo del sistema.
+- Preparada la arquitectura para implementar ATL, CTL y TSB.
