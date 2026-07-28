@@ -2,7 +2,58 @@
 
 Todas las modificaciones importantes del proyecto se documentan en este archivo.
 
-El proyecto sigue el versionado incremental basado en sprints de desarrollo.
+Cyc-AI sigue un versionado incremental basado en sprints de desarrollo.
+
+---
+
+# v0.7.0 — Motor fisiológico
+
+## Fecha
+
+Julio 2026
+
+---
+
+## Añadido
+
+### Motor fisiológico
+
+- Nuevo `ExponentialLoadCalculator`.
+- Nuevo `CTLCalculator`.
+- Cálculo de `TSB (Training Stress Balance)`.
+- Serie temporal `TrainingLoadSeries` diaria y continua.
+- Inclusión automática de días sin entrenamiento con carga 0.
+- Normalización de fechas del historial.
+- Agregación automática de múltiples entrenamientos realizados el mismo día.
+
+### Integración
+
+- `TrainingStatusBuilder` calcula ahora:
+  - Training Load
+  - ATL
+  - CTL
+  - TSB
+- Integración completa del estado fisiológico dentro de `AthleteContext`.
+- Exposición de `training_status` mediante la API REST.
+
+---
+
+## Mejorado
+
+- Reutilización del algoritmo exponencial mediante `ExponentialLoadCalculator`.
+- ATL implementado utilizando una constante temporal de 7 días.
+- CTL implementado utilizando una constante temporal de 42 días.
+- El cálculo fisiológico utiliza una serie diaria continua, reproduciendo el comportamiento esperado del modelo de Bannister.
+- Mejor separación entre algoritmos fisiológicos y lógica de integración.
+
+---
+
+## Corregido
+
+- Corrección del acceso a `TrainingLoadResult.value`.
+- Corrección de la construcción del estado fisiológico.
+- Corrección de imports del módulo `physiology`.
+- Estabilización del cálculo de ATL, CTL y TSB.
 
 ---
 
@@ -29,9 +80,9 @@ Julio 2026
 
 ## Mejorado
 
-- El flujo de construcción del contexto del atleta ahora incorpora el estado fisiológico.
+- El flujo de construcción del contexto del atleta incorpora el estado fisiológico.
 - El procesamiento del historial queda desacoplado del Coach.
-- La arquitectura queda preparada para CTL, TSB, Fatigue y Recovery.
+- La arquitectura queda preparada para la evolución del motor fisiológico.
 - El endpoint `/fit/upload` vuelve a funcionar correctamente tras la integración.
 
 ---
@@ -89,15 +140,15 @@ Julio 2026
 ## Añadido
 
 - Arquitectura por capas.
-- DataEngine.
-- Athlete.
-- Workout.
-- AthleteContext.
-- TrainingService.
-- Coach.
-- WorkoutClassifier.
-- RecommendationEngine.
-- Motor fisiológico inicial.
+- `DataEngine`.
+- `Athlete`.
+- `Workout`.
+- `AthleteContext`.
+- `TrainingService`.
+- `Coach`.
+- `WorkoutClassifier`.
+- `RecommendationEngine`.
+- Primer diseño del motor fisiológico.
 
 ---
 
@@ -110,53 +161,54 @@ Julio 2026
 
 ---
 
-# Próxima versión (v0.7.0)
+# Próxima versión (v0.8.0)
 
 ## Objetivos
 
-### Motor fisiológico
+### Coach fisiológico
 
-- Implementar ATL mediante media exponencial.
-- Implementar CTL.
-- Implementar TSB.
-- Implementar Fatigue Score.
-- Implementar Recovery Score.
-- Implementar Fitness Score.
+- Utilizar ATL en las recomendaciones.
+- Utilizar CTL en las recomendaciones.
+- Utilizar TSB en las recomendaciones.
+- Detectar fatiga acumulada.
+- Detectar recuperación.
+- Ajustar recomendaciones según el estado fisiológico.
 
 ---
 
-### Coach
+### Nuevas métricas
 
-- Incorporar reglas fisiológicas.
-- Detectar sobreentrenamiento.
-- Detectar falta de recuperación.
-- Ajustar recomendaciones utilizando TrainingStatus.
+- Fatigue Score.
+- Recovery Score.
+- Fitness Score.
 
 ---
 
 ### Inteligencia Artificial
 
-- Primer razonamiento basado en contexto fisiológico.
+- Primer razonamiento basado en el estado fisiológico.
 - Explicaciones inteligentes.
 - Recomendaciones personalizadas.
-- Planificador de entrenamiento.
+- Planificación adaptativa.
 
 ---
 
-# Estado del proyecto
+# Estado actual del proyecto
 
 Actualmente Cyc-AI dispone de:
 
 - Lectura de FIT y FIT.GZ.
-- Procesamiento del historial de entrenamientos.
-- HistorySummary.
-- Cálculo de TRIMP.
-- TrainingLoadResult.
-- TrainingLoadSeries.
-- TrainingStatus.
-- Pipeline fisiológico integrado.
-- DataEngine completamente desacoplado.
-- Coach basado en contexto.
-- API REST mediante FastAPI.
-
-El siguiente hito del proyecto será transformar el estado fisiológico del atleta mediante el cálculo real de ATL, CTL y TSB.
+- Procesamiento automático del entrenamiento.
+- Procesamiento del historial.
+- `HistorySummary`.
+- Cálculo de TRIMP mediante el modelo de Bannister.
+- `TrainingLoadSeries`.
+- `ExponentialLoadCalculator`.
+- ATL.
+- CTL.
+- TSB.
+- `TrainingStatus`.
+- `AthleteContext`.
+- `DataEngine`.
+- Recomendaciones mediante el Coach.
+- API REST con FastAPI.

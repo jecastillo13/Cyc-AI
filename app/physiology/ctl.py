@@ -1,14 +1,16 @@
 from app.physiology.exponential_load_calculator import (
     ExponentialLoadCalculator,
 )
-from app.physiology.models.training_load_series import TrainingLoadSeries
+from app.physiology.models.training_load_series import (
+    TrainingLoadSeries,
+)
 
 
-class ATLCalculator:
+class CTLCalculator:
     """
-    Calcula el Acute Training Load (ATL).
+    Calcula el Chronic Training Load (CTL).
 
-    El ATL representa la fatiga reciente del atleta y se calcula
+    El CTL representa el estado de forma del atleta y se calcula
     mediante una media móvil exponencial de la carga de entrenamiento.
 
     La carga utilizada puede ser:
@@ -22,7 +24,7 @@ class ATLCalculator:
     por lo que es independiente del origen de los datos.
     """
 
-    TIME_CONSTANT = 7
+    TIME_CONSTANT = 42
 
     def __init__(self):
 

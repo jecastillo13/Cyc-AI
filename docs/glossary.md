@@ -33,6 +33,22 @@ Actualmente contiene:
 
 ---
 
+## ATL
+
+**Acute Training Load**
+
+Representa la carga aguda del atleta.
+
+Se calcula mediante una media exponencial con una constante temporal de **7 días** sobre la serie diaria de carga.
+
+Un ATL elevado suele indicar una carga reciente alta.
+
+Estado:
+
+**Implementado.**
+
+---
+
 # C
 
 ## Cadencia
@@ -61,13 +77,13 @@ No realiza cálculos fisiológicos.
 
 Representa la carga crónica del atleta.
 
-Se calcula mediante una media móvil exponencial de aproximadamente 42 días.
+Se calcula mediante una media exponencial con una constante temporal de **42 días** sobre la serie diaria de carga.
 
-Un CTL elevado suele indicar una buena condición física.
+Un CTL elevado suele indicar una mayor adaptación al entrenamiento.
 
 Estado:
 
-Pendiente de implementación.
+**Implementado.**
 
 ---
 
@@ -78,6 +94,21 @@ Pendiente de implementación.
 Componente responsable de construir el `AthleteContext`.
 
 Es el único punto donde se integran los distintos modelos del sistema.
+
+---
+
+# E
+
+## ExponentialLoadCalculator
+
+Componente reutilizable encargado de calcular medias exponenciales sobre una serie de cargas de entrenamiento.
+
+Actualmente es utilizado por:
+
+- ATLCalculator
+- CTLCalculator
+
+Su objetivo es centralizar el algoritmo exponencial y evitar duplicación de código.
 
 ---
 
@@ -263,10 +294,10 @@ Resultado del cálculo de carga.
 
 Actualmente contiene:
 
-- method
-- value
-- confidence
-- notes
+- Method
+- Value
+- Confidence
+- Notes
 
 Este modelo desacopla el algoritmo utilizado del resto de la arquitectura.
 
@@ -274,9 +305,11 @@ Este modelo desacopla el algoritmo utilizado del resto de la arquitectura.
 
 ## TrainingLoadSeries
 
-Serie temporal de cargas de entrenamiento.
+Serie temporal diaria de cargas de entrenamiento.
 
 Se construye a partir del historial del atleta.
+
+Incluye automáticamente los días sin entrenamiento con una carga igual a cero para mantener la continuidad temporal.
 
 Su objetivo es alimentar los algoritmos fisiológicos.
 
@@ -306,7 +339,7 @@ Actualmente contiene:
 - Fatigue Score
 - Recovery Score
 
-Es el modelo que utilizarán el Coach y el futuro Coach IA.
+Es el modelo utilizado por el Coach y por los futuros componentes de Inteligencia Artificial.
 
 ---
 
@@ -316,7 +349,7 @@ Es el modelo que utilizarán el Coach y el futuro Coach IA.
 
 Algoritmo desarrollado por Eric Bannister para estimar la carga de entrenamiento mediante la frecuencia cardíaca.
 
-Es el algoritmo actualmente utilizado por Cyc-AI.
+Es el algoritmo utilizado actualmente por Cyc-AI.
 
 ---
 
@@ -324,7 +357,7 @@ Es el algoritmo actualmente utilizado por Cyc-AI.
 
 **Training Stress Balance**
 
-Representa el equilibrio entre la forma física y la fatiga.
+Representa el equilibrio entre la condición física y la fatiga.
 
 Se calcula mediante:
 
@@ -332,13 +365,13 @@ Se calcula mediante:
 TSB = CTL - ATL
 ```
 
-Valores positivos suelen indicar buena recuperación.
+Valores positivos suelen indicar un mayor nivel de recuperación.
 
 Valores negativos suelen indicar fatiga acumulada.
 
 Estado:
 
-Pendiente.
+**Implementado.**
 
 ---
 

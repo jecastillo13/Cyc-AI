@@ -21,6 +21,8 @@ La arquitectura está diseñada para crecer sin modificar el núcleo del sistema
 
 ## Arquitectura
 
+Implementado:
+
 - [x] FastAPI
 - [x] API modular
 - [x] Separación por capas
@@ -36,6 +38,8 @@ La arquitectura está diseñada para crecer sin modificar el núcleo del sistema
 
 ## FIT
 
+Implementado:
+
 - [x] Lectura de archivos FIT
 - [x] Lectura de archivos FIT.GZ
 - [x] FitImporter
@@ -47,6 +51,8 @@ La arquitectura está diseñada para crecer sin modificar el núcleo del sistema
 # Sprint 3 — Historial
 
 ## Analytics
+
+Implementado:
 
 - [x] WorkoutHistory
 - [x] WorkoutHistoryAnalyzer
@@ -93,9 +99,8 @@ Pendiente:
 Implementado:
 
 - [x] TrainingLoadSeries
+- [x] TrainingLoadPoint
 - [x] TrainingStatus
-
----
 
 ## Builders
 
@@ -104,19 +109,23 @@ Implementado:
 - [x] TrainingLoadSeriesBuilder
 - [x] TrainingStatusBuilder
 
----
-
 ## Algoritmos
 
 Implementado:
 
-- [x] ATLCalculator (estructura integrada)
+- [x] ExponentialLoadCalculator
+- [x] ATL (media exponencial de 7 días)
+- [x] CTL (media exponencial de 42 días)
+- [x] TSB (Training Stress Balance)
 
-Pendiente:
+## Procesamiento del historial
 
-- [ ] Cálculo exponencial completo de ATL
+Implementado:
 
----
+- [x] Serie temporal diaria continua
+- [x] Normalización de fechas
+- [x] Agregación de múltiples entrenamientos por día
+- [x] Inclusión automática de días de descanso
 
 ## Integración
 
@@ -124,22 +133,19 @@ Implementado:
 
 - [x] Integración con DataEngine
 - [x] Integración con AthleteContext
-- [x] Integración con Coach
+- [x] Exposición mediante la API
 - [x] Endpoint `/fit/upload` funcionando correctamente
 
 ---
 
-# Sprint 6 — Estado fisiológico
+# Sprint 6 — Estado fisiológico avanzado
 
-Objetivo:
+## Objetivo
 
-Convertir el historial del atleta en un estado fisiológico completo.
+Completar la evaluación fisiológica del atleta utilizando las métricas ya calculadas.
 
-## Implementar
+Implementar:
 
-- [ ] ATL (media exponencial 7 días)
-- [ ] CTL (media exponencial 42 días)
-- [ ] TSB
 - [ ] Fatigue Score
 - [ ] Recovery Score
 - [ ] Fitness Score
@@ -167,25 +173,38 @@ TSB
 
 ↓
 
+Fatigue
+
+↓
+
+Recovery
+
+↓
+
+Fitness
+
+↓
+
 TrainingStatus
 ```
 
 ---
 
-# Sprint 7 — Coach avanzado
+# Sprint 7 — Coach adaptativo
 
 ## Reglas fisiológicas
 
 Pendiente:
 
-- [ ] Utilizar ATL
-- [ ] Utilizar CTL
-- [ ] Utilizar TSB
-- [ ] Detectar sobreentrenamiento
-- [ ] Detectar falta de carga
-- [ ] Recomendar recuperación
-- [ ] Recomendar entrenamiento de calidad
-- [ ] Ajustar intensidad semanal
+- [ ] Utilizar ATL para interpretar la carga reciente.
+- [ ] Utilizar CTL para interpretar la condición física.
+- [ ] Utilizar TSB para evaluar recuperación.
+- [ ] Detectar fatiga acumulada.
+- [ ] Detectar falta de carga.
+- [ ] Recomendar recuperación.
+- [ ] Recomendar entrenamiento de calidad.
+- [ ] Ajustar la intensidad semanal.
+- [ ] Explicar el razonamiento fisiológico.
 
 ---
 
@@ -195,12 +214,13 @@ Pendiente:
 
 Pendiente:
 
-- [ ] Explicaciones inteligentes
-- [ ] Predicción de fatiga
-- [ ] Predicción de rendimiento
-- [ ] Ajuste automático de carga
-- [ ] Planificador semanal
-- [ ] Planificador mensual
+- [ ] Explicaciones inteligentes.
+- [ ] Predicción de fatiga.
+- [ ] Predicción de rendimiento.
+- [ ] Ajuste automático de carga.
+- [ ] Planificador semanal.
+- [ ] Planificador mensual.
+- [ ] Objetivos personalizados.
 
 ---
 
@@ -210,16 +230,16 @@ Pendiente:
 
 Pendiente:
 
-- [ ] Estado fisiológico
-- [ ] Historial
-- [ ] Tendencias
-- [ ] ATL
-- [ ] CTL
-- [ ] TSB
-- [ ] Recovery
-- [ ] Fatigue
-- [ ] Fitness
-- [ ] Gráficas
+- [ ] Estado fisiológico.
+- [ ] Historial.
+- [ ] Tendencias.
+- [ ] ATL.
+- [ ] CTL.
+- [ ] TSB.
+- [ ] Fatigue Score.
+- [ ] Recovery Score.
+- [ ] Fitness Score.
+- [ ] Gráficas.
 
 ---
 
@@ -227,10 +247,10 @@ Pendiente:
 
 Pendiente:
 
-- [ ] Garmin Connect
-- [ ] Strava
-- [ ] TrainingPeaks
-- [ ] Intervals.icu
+- [ ] Garmin Connect.
+- [ ] Strava.
+- [ ] TrainingPeaks.
+- [ ] Intervals.icu.
 
 ---
 
@@ -238,17 +258,17 @@ Pendiente:
 
 ## Completado
 
-- [x] Pytest
-- [x] Pruebas manuales mediante Swagger
-- [x] Flujo completo `/fit/upload`
+- [x] Pytest.
+- [x] Pruebas manuales mediante Swagger.
+- [x] Flujo completo `/fit/upload`.
 
 Pendiente:
 
-- [ ] Cobertura de Analytics
-- [ ] Cobertura de Physiology
-- [ ] Cobertura del Coach
-- [ ] Cobertura de API
-- [ ] Integración Continua (CI)
+- [ ] Cobertura de Analytics.
+- [ ] Cobertura de Physiology.
+- [ ] Cobertura del Coach.
+- [ ] Cobertura de la API.
+- [ ] Integración Continua (CI).
 
 ---
 
@@ -256,15 +276,15 @@ Pendiente:
 
 Completado:
 
-- [x] README
-- [x] Arquitectura
-- [x] Roadmap
-- [x] Changelog
-- [x] API
-- [x] Motor fisiológico
-- [x] IA
-- [x] Glosario
-- [x] Desarrollo
+- [x] README.
+- [x] Arquitectura.
+- [x] Roadmap.
+- [x] Changelog.
+- [x] API.
+- [x] Motor fisiológico.
+- [x] IA.
+- [x] Glosario.
+- [x] Desarrollo.
 
 ---
 
@@ -275,26 +295,30 @@ Actualmente Cyc-AI es capaz de:
 - Leer archivos FIT y FIT.GZ.
 - Analizar entrenamientos automáticamente.
 - Calcular TRIMP mediante el modelo de Bannister.
-- Leer el historial de TrainingPeaks.
-- Construir un HistorySummary.
-- Construir un TrainingStatus.
-- Integrar el contexto completo mediante DataEngine.
+- Leer TSS desde el historial cuando está disponible.
+- Procesar el historial de entrenamientos.
+- Construir un `HistorySummary`.
+- Generar una serie temporal diaria continua.
+- Calcular ATL.
+- Calcular CTL.
+- Calcular TSB.
+- Construir un `TrainingStatus`.
+- Integrar el contexto completo mediante `DataEngine`.
+- Exponer el estado fisiológico mediante la API.
 - Generar recomendaciones mediante el Coach.
-- Exponer toda la información mediante FastAPI.
 
 ---
 
 # Próximo objetivo
 
-El siguiente sprint estará dedicado exclusivamente al motor fisiológico.
+El siguiente sprint estará dedicado a transformar las métricas fisiológicas en decisiones útiles para el atleta.
 
-Objetivos:
+Objetivos principales:
 
-1. Implementar ATL real.
-2. Implementar CTL.
-3. Implementar TSB.
-4. Calcular Fatigue Score.
-5. Calcular Recovery Score.
-6. Integrar estas métricas en el Coach.
+1. Implementar Fatigue Score.
+2. Implementar Recovery Score.
+3. Implementar Fitness Score.
+4. Evolucionar el Coach para utilizar ATL, CTL y TSB.
+5. Generar recomendaciones adaptativas basadas en el estado fisiológico.
 
-Este será el paso que convertirá a Cyc-AI de un analizador de entrenamientos a un entrenador inteligente capaz de interpretar el estado fisiológico del atleta.
+Con este sprint, Cyc-AI dará el paso de calcular el estado fisiológico del atleta a interpretarlo de forma inteligente.

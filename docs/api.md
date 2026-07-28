@@ -4,7 +4,7 @@
 
 La API de Cyc-AI permite analizar entrenamientos de ciclismo a partir de archivos **FIT** y **FIT.GZ**.
 
-Actualmente la API expone un único endpoint para el análisis de entrenamientos, aunque la arquitectura está preparada para incorporar nuevos servicios en futuras versiones.
+Actualmente la API expone un único endpoint para el análisis completo de un entrenamiento, aunque la arquitectura está preparada para incorporar nuevos servicios en futuras versiones.
 
 ---
 
@@ -46,7 +46,7 @@ Analiza un entrenamiento contenido en un archivo FIT o FIT.GZ.
 
 ---
 
-## Flujo interno
+# Flujo interno
 
 El endpoint ejecuta el siguiente proceso:
 
@@ -83,6 +83,10 @@ WorkoutHistoryAnalyzer
 
 ↓
 
+HistorySummary
+
+↓
+
 DataEngine
 
 ↓
@@ -91,7 +95,20 @@ TrainingLoadSeriesBuilder
 
 ↓
 
+TrainingLoadSeries
+
+↓
+
+ExponentialLoadCalculator
+
+├────────────┐
+
+↓            ↓
+
 ATLCalculator
+CTLCalculator
+
+└──────┬─────┘
 
 ↓
 
@@ -147,7 +164,7 @@ Actualmente la API devuelve un objeto JSON con la siguiente estructura:
         "recomendacion": "",
         "training_load": {
             "method": "TRIMP",
-            "value": 0,
+            "value": 47.53,
             "confidence": 1.0,
             "notes": ""
         }
@@ -163,6 +180,15 @@ Actualmente la API devuelve un objeto JSON con la siguiente estructura:
         "duration_last_28_days": 0,
         "average_distance": 0,
         "average_duration": 0
+    },
+
+    "training_status": {
+        "training_load": 47.53,
+        "atl": 50.43,
+        "ctl": 61.22,
+        "tsb": 10.79,
+        "fatigue_score": 0.0,
+        "recovery_score": 0.0
     },
 
     "metricas": {
@@ -188,13 +214,13 @@ Información del atleta utilizada durante el análisis.
 
 Incluye:
 
-- Nombre
-- Peso
-- Altura
-- FTP
-- Fecha de nacimiento
-- Frecuencia cardíaca máxima
-- Frecuencia cardíaca en reposo
+- Nombre.
+- Peso.
+- Altura.
+- FTP.
+- Fecha de nacimiento.
+- Frecuencia cardíaca máxima.
+- Frecuencia cardíaca en reposo.
 
 ---
 
@@ -204,15 +230,15 @@ Resumen del entrenamiento obtenido tras analizar el archivo FIT.
 
 Actualmente incluye:
 
-- Número de registros
-- Distancia
-- Duración
-- Potencia media
-- Potencia máxima
-- Frecuencia cardíaca media
-- Frecuencia cardíaca máxima
-- Cadencia media
-- Velocidad media
+- Número de registros.
+- Distancia.
+- Duración.
+- Potencia media.
+- Potencia máxima.
+- Frecuencia cardíaca media.
+- Frecuencia cardíaca máxima.
+- Cadencia media.
+- Velocidad media.
 
 ---
 
@@ -226,13 +252,13 @@ Actualmente contiene:
 - Recomendación.
 - Resultado del cálculo de carga (`TrainingLoadResult`).
 
-En futuras versiones también utilizará:
+Actualmente las recomendaciones utilizan:
 
-- ATL
-- CTL
-- TSB
-- Fatigue Score
-- Recovery Score
+- Tipo de entrenamiento.
+- Carga del entrenamiento.
+- Historial resumido.
+
+En próximas versiones incorporarán el estado fisiológico completo.
 
 ---
 
@@ -248,6 +274,23 @@ Incluye:
 - Distancia acumulada.
 - Duración acumulada.
 - Promedios.
+
+---
+
+## training_status
+
+Representa el estado fisiológico actual del atleta.
+
+Actualmente contiene:
+
+- Training Load.
+- ATL (Acute Training Load).
+- CTL (Chronic Training Load).
+- TSB (Training Stress Balance).
+- Fatigue Score.
+- Recovery Score.
+
+Este bloque es generado automáticamente por el motor fisiológico y forma parte del `AthleteContext`.
 
 ---
 
@@ -328,15 +371,18 @@ POST /plan/generate
 
 # Estado actual
 
-La API permite actualmente:
+Actualmente la API permite:
 
-- Analizar archivos FIT.
-- Analizar archivos FIT.GZ.
+- Analizar archivos FIT y FIT.GZ.
 - Calcular la carga mediante TRIMP.
 - Procesar el historial del atleta.
-- Generar un HistorySummary.
-- Construir un TrainingStatus.
+- Generar un `HistorySummary`.
+- Construir una serie temporal diaria continua.
+- Calcular ATL.
+- Calcular CTL.
+- Calcular TSB.
+- Construir un `TrainingStatus`.
+- Exponer el estado fisiológico mediante la respuesta JSON.
 - Generar recomendaciones mediante el Coach.
-- Exponer toda la información mediante una única respuesta JSON.
 
-La siguiente evolución de la API incorporará el estado fisiológico completo (ATL, CTL, TSB, Fatigue y Recovery) como parte de la respuesta.
+La siguiente evolución de la API incorporará recomendaciones adaptativas basadas en el estado fisiológico del atleta.

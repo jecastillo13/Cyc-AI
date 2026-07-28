@@ -16,6 +16,8 @@ Todas las recomendaciones deben estar basadas en datos objetivos obtenidos duran
 
 El Coach únicamente interpreta el contexto recibido.
 
+La lógica fisiológica permanece completamente separada del razonamiento del Coach.
+
 ---
 
 # Arquitectura
@@ -48,7 +50,7 @@ TrainingStatus
 Metrics
 ```
 
-En futuras versiones podrán añadirse nuevos modelos sin modificar el funcionamiento del Coach.
+Esto permite que el Coach evolucione sin modificar el resto de la arquitectura.
 
 ---
 
@@ -104,22 +106,59 @@ El Coach siempre debe:
 
 ---
 
-# Variables utilizadas
+# Variables disponibles
 
-Actualmente el Coach utiliza:
+Actualmente el Coach dispone de:
 
 - Tipo de entrenamiento.
-- Carga del entrenamiento (TrainingLoadResult).
-- Historial resumido (HistorySummary).
+- Training Load.
+- HistorySummary.
+- TrainingStatus.
 
-En próximas versiones utilizará además:
+Dentro de `TrainingStatus` están disponibles:
 
+- Training Load.
 - ATL.
 - CTL.
 - TSB.
 - Fatigue Score.
 - Recovery Score.
-- Fitness Score.
+
+Actualmente las recomendaciones utilizan principalmente:
+
+- Tipo de entrenamiento.
+- Carga del entrenamiento.
+- Historial reciente.
+
+Las métricas fisiológicas ya forman parte del contexto y serán utilizadas progresivamente durante los siguientes sprints.
+
+---
+
+# Modelo de razonamiento
+
+El Coach interpreta la información siguiendo una cadena de decisión.
+
+```
+Entrenamiento
+
+↓
+
+Carga
+
+↓
+
+Historial
+
+↓
+
+Estado fisiológico
+
+↓
+
+Recomendación
+```
+
+Cada etapa añade contexto antes de generar una recomendación.
 
 ---
 
@@ -147,7 +186,7 @@ Puedes continuar con el plan previsto.
 
 Si:
 
-- ATL alto.
+- ATL elevado.
 - CTL estable.
 - TSB ligeramente negativo.
 
@@ -156,7 +195,7 @@ Entonces:
 ```
 La carga reciente es elevada.
 
-Se recomienda un entrenamiento regenerativo antes de realizar otra sesión intensa.
+Un entrenamiento regenerativo favorecerá la recuperación antes de otra sesión intensa.
 ```
 
 ---
@@ -165,7 +204,6 @@ Se recomienda un entrenamiento regenerativo antes de realizar otra sesión inten
 
 Si:
 
-- ATL muy bajo.
 - CTL bajo.
 - Historial con pocos entrenamientos.
 
@@ -182,14 +220,14 @@ Existe margen para incrementar progresivamente la carga de entrenamiento.
 Si:
 
 - TSB muy negativo.
-- Fatigue Score alto.
+- Fatigue Score elevado.
 
 Entonces:
 
 ```
 Se detectan signos de fatiga acumulada.
 
-Se recomienda priorizar la recuperación.
+Se recomienda priorizar la recuperación antes de aumentar la intensidad.
 ```
 
 ---
@@ -201,9 +239,13 @@ Uno de los objetivos del Coach IA es justificar siempre sus recomendaciones.
 Ejemplo:
 
 ```
-Entrenamiento clasificado como resistencia aeróbica.
+El entrenamiento ha sido clasificado como resistencia aeróbica.
 
-La carga obtenida mediante TRIMP ha sido moderada y el historial reciente muestra una frecuencia de entrenamiento estable.
+La carga obtenida mediante TRIMP ha sido moderada.
+
+El historial reciente muestra una frecuencia de entrenamiento estable.
+
+El estado fisiológico indica un equilibrio adecuado entre carga reciente y adaptación.
 
 Por ello se recomienda continuar con la planificación prevista.
 ```
@@ -214,14 +256,14 @@ Por ello se recomienda continuar con la planificación prevista.
 
 Las siguientes versiones incorporarán:
 
-- Explicaciones fisiológicas.
+- Interpretación completa de ATL, CTL y TSB.
+- Utilización de Fatigue Score y Recovery Score.
 - Predicción de fatiga.
 - Predicción de rendimiento.
 - Planificación semanal.
 - Planificación mensual.
 - Ajuste automático de carga.
 - Objetivos personalizados.
-- Adaptación al nivel del ciclista.
 
 ---
 
@@ -243,7 +285,7 @@ TrainingStatus
 Coach
 ```
 
-De esta forma ambos módulos permanecen completamente desacoplados.
+Esta separación permite mejorar el motor fisiológico sin modificar la lógica del Coach.
 
 ---
 
@@ -254,7 +296,8 @@ Actualmente el Coach IA es capaz de:
 - Clasificar el entrenamiento.
 - Interpretar la carga obtenida mediante TRIMP.
 - Utilizar el historial resumido del atleta.
+- Trabajar sobre un `AthleteContext` completo.
+- Acceder al estado fisiológico del atleta.
 - Generar recomendaciones básicas.
-- Trabajar sobre el AthleteContext construido por el DataEngine.
 
-El siguiente paso será incorporar el estado fisiológico completo mediante ATL, CTL, TSB, Fatigue y Recovery para ofrecer recomendaciones mucho más precisas y personalizadas.
+El siguiente paso será utilizar ATL, CTL, TSB y las futuras métricas fisiológicas para generar recomendaciones adaptativas y completamente personalizadas.

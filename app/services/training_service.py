@@ -77,6 +77,16 @@ class TrainingService:
                 "perfil": perfil,
                 "resumen": resumen,
                 "coach": analisis,
+
+                "training_status": {
+                    "training_load": contexto.training_status.training_load,
+                    "atl": contexto.training_status.atl,
+                    "ctl": contexto.training_status.ctl,
+                    "tsb": contexto.training_status.tsb,
+                    "fatigue_score": contexto.training_status.fatigue_score,
+                    "recovery_score": contexto.training_status.recovery_score,
+                },
+
                 "history_summary": {
                     "total_workouts": contexto.history_summary.total_workouts,
                     "workouts_last_7_days": contexto.history_summary.workouts_last_7_days,
@@ -88,6 +98,7 @@ class TrainingService:
                     "average_distance": contexto.history_summary.average_distance,
                     "average_duration": contexto.history_summary.average_duration
                 },
+
                 "metricas": metricas_info
             }
 

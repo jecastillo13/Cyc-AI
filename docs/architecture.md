@@ -19,7 +19,8 @@ La arquitectura está preparada para crecer incorporando nuevos algoritmos fisio
 - El motor fisiológico es independiente del Coach.
 - Los componentes intercambian modelos de dominio, nunca diccionarios.
 - El historial de entrenamiento se procesa una única vez.
-- La arquitectura debe permitir sustituir algoritmos sin modificar el resto del sistema.
+- Los algoritmos fisiológicos son reutilizables e independientes.
+- La arquitectura permite incorporar nuevos modelos sin modificar los existentes.
 
 ---
 
@@ -66,13 +67,17 @@ DataEngine
         │                  TrainingLoadSeries
         │                           │
         │                           ▼
-        │                    ATLCalculator
-        │                           │
-        │                           ▼
-        │                 TrainingStatusBuilder
-        │                           │
-        │                           ▼
-        │                  TrainingStatus
+        │            ExponentialLoadCalculator
+        │                  ├──────────┐
+        │                  ▼          ▼
+        │           ATLCalculator  CTLCalculator
+        │                  │          │
+        │                  └────┬─────┘
+        │                       ▼
+        │             TrainingStatusBuilder
+        │                       │
+        │                       ▼
+        │               TrainingStatus
         │
         ▼
 AthleteContext
@@ -130,6 +135,7 @@ Actualmente el sistema utiliza los siguientes modelos principales.
 Athlete
 Workout
 TrainingLoadResult
+TrainingLoadSeries
 HistorySummary
 TrainingStatus
 AthleteContext
@@ -143,7 +149,7 @@ Cada modelo representa una parte del dominio del entrenamiento y evita el uso de
 
 El motor fisiológico está completamente desacoplado del Coach.
 
-Su responsabilidad es transformar el historial del atleta en un estado fisiológico.
+Su responsabilidad es transformar el historial del atleta en un estado fisiológico objetivo.
 
 Actualmente el flujo es:
 
@@ -157,34 +163,22 @@ TrainingLoadSeriesBuilder
 TrainingLoadSeries
         │
         ▼
-ATLCalculator
-        │
-        ▼
+ExponentialLoadCalculator
+      ├────────────┐
+      ▼            ▼
+ATLCalculator   CTLCalculator
+      │            │
+      └──────┬─────┘
+             ▼
 TrainingStatusBuilder
-        │
-        ▼
+             │
+             ▼
 TrainingStatus
 ```
 
-En futuras versiones este flujo incorporará:
+El cálculo utiliza una serie temporal diaria continua, rellenando automáticamente los días sin entrenamiento con carga cero.
 
-```
-CTLCalculator
-
-↓
-
-TSBCalculator
-
-↓
-
-FatigueCalculator
-
-↓
-
-RecoveryCalculator
-```
-
-sin modificar el resto del sistema.
+Esto permite obtener valores fisiológicamente consistentes para ATL y CTL mediante medias exponenciales.
 
 ---
 
@@ -234,6 +228,14 @@ DataFrame
 
 ↓
 
+TrainingLoadSeriesBuilder
+
+↓
+
+Serie diaria continua
+
+↓
+
 WorkoutHistoryAnalyzer
 
 ↓
@@ -241,7 +243,7 @@ WorkoutHistoryAnalyzer
 HistorySummary
 ```
 
-El resultado se utiliza tanto por el Coach como por el motor fisiológico.
+La serie continua se utiliza para el cálculo fisiológico mientras que el resumen estadístico alimenta al Coach.
 
 Ningún componente del sistema accede directamente al CSV.
 
@@ -262,7 +264,7 @@ Actualmente crea automáticamente:
 - TrainingStatus
 - AthleteContext
 
-Esto garantiza que todos los motores trabajen sobre la misma información.
+Esto garantiza que todos los módulos trabajen sobre la misma información.
 
 ---
 
@@ -279,7 +281,7 @@ Actualmente contiene:
 - TrainingStatus
 - Metrics
 
-El objetivo es que cualquier componente del sistema pueda tomar decisiones únicamente utilizando este objeto.
+El objetivo es que cualquier componente del sistema pueda tomar decisiones utilizando exclusivamente este objeto.
 
 ---
 
@@ -293,16 +295,13 @@ Actualmente utiliza:
 - TrainingLoadResult
 - HistorySummary
 
-En próximas versiones utilizará además:
+El estado fisiológico (`TrainingStatus`) ya forma parte del contexto y será utilizado en el siguiente sprint para generar recomendaciones adaptativas basadas en:
 
-- TrainingStatus
 - ATL
 - CTL
 - TSB
 - Fatigue Score
 - Recovery Score
-
-para generar recomendaciones fisiológicas más precisas.
 
 ---
 
@@ -316,9 +315,11 @@ Actualmente Cyc-AI dispone de:
 - Construcción del AthleteContext.
 - Procesamiento del historial de entrenamientos.
 - Generación de HistorySummary.
-- Pipeline fisiológico inicial.
-- TrainingLoadSeries.
-- TrainingStatus.
+- Construcción de una serie temporal diaria continua.
+- Cálculo de ATL.
+- Cálculo de CTL.
+- Cálculo de TSB.
+- Construcción de TrainingStatus.
 - Integración completa con DataEngine.
 - Recomendaciones del Coach.
 - API REST mediante FastAPI.
@@ -329,13 +330,12 @@ Actualmente Cyc-AI dispone de:
 
 Las siguientes versiones incorporarán:
 
-- Chronic Training Load (CTL)
-- Training Stress Balance (TSB)
-- Fatigue Score
-- Recovery Score
-- Fitness Score
-- Motor avanzado de IA
-- Predicción de rendimiento
-- Planificación inteligente del entrenamiento
+- Fatigue Score.
+- Recovery Score.
+- Fitness Score.
+- Coach adaptativo basado en TrainingStatus.
+- Motor avanzado de IA.
+- Predicción de rendimiento.
+- Planificación inteligente del entrenamiento.
 
-La arquitectura actual ya está preparada para incorporar estos componentes sin modificar la estructura principal del sistema.
+La arquitectura actual ya está preparada para incorporar estas capacidades sin modificar la estructura principal del sistema.

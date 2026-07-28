@@ -13,6 +13,11 @@ class TrainingLoadSeriesBuilder:
 
     Actualmente utiliza el TSS cuando está disponible.
 
+    La serie resultante es diaria y continua. Los días sin
+    entrenamiento se rellenan con una carga de 0 para que los
+    cálculos de ATL y CTL reproduzcan correctamente el modelo
+    exponencial de Bannister.
+
     En futuras versiones podrá utilizar:
         - TRIMP
         - HRTSS
@@ -23,8 +28,6 @@ class TrainingLoadSeriesBuilder:
     LOAD_COLUMN = "TSS"
 
     def build(self, history: pd.DataFrame) -> TrainingLoadSeries:
-
-        points = []
 
         if history.empty:
             return TrainingLoadSeries(points=[])
@@ -37,13 +40,47 @@ class TrainingLoadSeriesBuilder:
 
         dataframe = history.copy()
 
-        dataframe[self.DATE_COLUMN] = pd.to_datetime(
-            dataframe[self.DATE_COLUMN]
+        # Convertir la columna de fecha y eliminar la parte horaria.
+        dataframe[self.DATE_COLUMN] = (
+            pd.to_datetime(dataframe[self.DATE_COLUMN])
+            .dt.normalize()
         )
 
+        # Ordenar cronológicamente.
         dataframe = dataframe.sort_values(self.DATE_COLUMN)
 
-        dataframe = dataframe.dropna(subset=[self.LOAD_COLUMN])
+        # Sustituir cargas nulas por 0.
+        dataframe[self.LOAD_COLUMN] = (
+            dataframe[self.LOAD_COLUMN]
+            .fillna(0.0)
+            .astype(float)
+        )
+
+        # Si existen varios entrenamientos el mismo día,
+        # se suman sus cargas.
+        dataframe = (
+            dataframe
+            .groupby(self.DATE_COLUMN, as_index=False)[self.LOAD_COLUMN]
+            .sum()
+        )
+
+        # Crear un calendario diario completo.
+        full_range = pd.date_range(
+            start=dataframe[self.DATE_COLUMN].min(),
+            end=dataframe[self.DATE_COLUMN].max(),
+            freq="D",
+        )
+
+        # Añadir los días sin entrenamiento con carga 0.
+        dataframe = (
+            dataframe
+            .set_index(self.DATE_COLUMN)
+            .reindex(full_range, fill_value=0.0)
+            .rename_axis(self.DATE_COLUMN)
+            .reset_index()
+        )
+
+        points = []
 
         for _, row in dataframe.iterrows():
 

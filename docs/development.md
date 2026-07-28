@@ -68,14 +68,15 @@ La estructura general del proyecto es la siguiente:
 ```
 app/
 │
+├── analytics/
 ├── api/
 ├── coach/
-├── core/
-├── data/
+├── engine/
+├── fit/
 ├── models/
 ├── physiology/
 ├── services/
-└── utils/
+└── users/
 
 docs/
 
@@ -119,7 +120,36 @@ WorkoutHistoryAnalyzer
 
 ↓
 
+HistorySummary
+
+↓
+
 DataEngine
+
+↓
+
+TrainingLoadSeriesBuilder
+
+↓
+
+TrainingLoadSeries
+
+↓
+
+ExponentialLoadCalculator
+
+├────────────┐
+
+↓            ↓
+
+ATLCalculator
+CTLCalculator
+
+└──────┬─────┘
+
+↓
+
+TrainingStatusBuilder
 
 ↓
 
@@ -182,19 +212,15 @@ Actualmente incluye:
 
 - TrainingLoadSeries
 - TrainingLoadSeriesBuilder
+- ExponentialLoadCalculator
+- ATLCalculator
+- CTLCalculator
 - TrainingStatus
 - TrainingStatusBuilder
-- ATLCalculator
 
-En futuras versiones incorporará:
+El cálculo fisiológico se realiza sobre una serie temporal diaria continua.
 
-- CTLCalculator
-- TSBCalculator
-- FatigueCalculator
-- RecoveryCalculator
-- FitnessCalculator
-
-Todos estos componentes deben mantenerse desacoplados del Coach.
+Los algoritmos deben trabajar exclusivamente sobre modelos de dominio y nunca acceder directamente a archivos CSV.
 
 ---
 
@@ -260,11 +286,15 @@ Services
 
 ↓
 
-Domain
+Engine
 
 ↓
 
-Physiology
+Analytics / Physiology
+
+↓
+
+Models
 
 ↓
 
@@ -293,7 +323,7 @@ Las pruebas deben ser independientes entre sí y reproducibles.
 
 # Documentación
 
-Toda modificación significativa debe actualizar, como mínimo, los siguientes documentos cuando corresponda:
+Toda modificación significativa debe actualizar, cuando corresponda:
 
 - README.md
 - architecture.md
@@ -334,10 +364,11 @@ Se recomienda:
 - Mantener funciones pequeñas.
 - Evitar duplicación de código.
 - Reutilizar componentes existentes.
-- Preferir composición frente a herencia cuando sea posible.
+- Favorecer la composición frente a la herencia.
 - Escribir código legible antes que código complejo.
-- Mantener la documentación actualizada.
+- Mantener la documentación sincronizada con el código.
 - Revisar el impacto arquitectónico antes de añadir nuevas dependencias.
+- Añadir nuevas métricas fisiológicas reutilizando componentes existentes siempre que sea posible.
 
 ---
 
@@ -345,18 +376,31 @@ Se recomienda:
 
 Las siguientes fases del proyecto incluyen:
 
-- Implementación completa de ATL.
-- Incorporación de CTL.
-- Cálculo de TSB.
-- Métricas de Fatigue, Recovery y Fitness.
-- Evolución del Coach con reglas fisiológicas.
-- Integración de modelos de Inteligencia Artificial.
+- Implementación de Fatigue Score.
+- Implementación de Recovery Score.
+- Implementación de Fitness Score.
+- Evolución del Coach mediante reglas fisiológicas.
+- Incorporación de Inteligencia Artificial.
 - Nuevos endpoints para consulta del estado del atleta.
+- Dashboard de métricas fisiológicas.
 
 ---
 
 # Estado actual
 
-La arquitectura de Cyc-AI se encuentra preparada para evolucionar mediante la incorporación de nuevos algoritmos fisiológicos y capacidades de Inteligencia Artificial sin necesidad de modificar la estructura principal del proyecto.
+La arquitectura de Cyc-AI dispone actualmente de:
 
-La prioridad de desarrollo es mantener un núcleo estable, modular y bien documentado que facilite la incorporación de nuevas funcionalidades en los siguientes sprints.
+- Motor de análisis de entrenamientos.
+- Procesamiento del historial.
+- Cálculo de TRIMP.
+- Serie temporal diaria continua.
+- ExponentialLoadCalculator.
+- ATL.
+- CTL.
+- TSB.
+- TrainingStatus.
+- AthleteContext.
+- DataEngine como integrador del sistema.
+- API REST con FastAPI.
+
+El objetivo de los próximos sprints será convertir estas métricas fisiológicas en recomendaciones inteligentes y personalizadas mediante la evolución del Coach.

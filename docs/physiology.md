@@ -16,7 +16,7 @@ Ambos módulos permanecen completamente desacoplados.
 
 # Filosofía
 
-Cada algoritmo debe ser independiente.
+Cada algoritmo debe ser independiente y reutilizable.
 
 La arquitectura permite sustituir o incorporar nuevos métodos sin modificar el resto del sistema.
 
@@ -34,14 +34,15 @@ TrainingLoadCalculator
 TrainingLoadResult
 ```
 
-Hoy puede utilizar TRIMP.
+Actualmente el sistema puede utilizar:
 
-Mañana podrá utilizar:
+- TRIMP
+- TSS (cuando está disponible en el historial)
 
-- TSS
+En futuras versiones podrá incorporar nuevos métodos como:
+
 - HRTSS
 - Session RPE
-- Cualquier otro algoritmo
 
 sin modificar el resto de la aplicación.
 
@@ -49,13 +50,15 @@ sin modificar el resto de la aplicación.
 
 # Arquitectura del módulo
 
-Actualmente el módulo Physiology está compuesto por:
+Actualmente el módulo Physiology está compuesto por componentes especializados.
 
 ```
 physiology/
 
 │
+├── exponential_load_calculator.py
 ├── atl.py
+├── ctl.py
 ├── training_load.py
 ├── training_load_series_builder.py
 ├── training_status_builder.py
@@ -94,7 +97,15 @@ TrainingLoadSeries
 
 ↓
 
-ATLCalculator
+ExponentialLoadCalculator
+
+├──────────────┐
+
+↓              ↓
+
+ATLCalculator  CTLCalculator
+
+└──────┬───────┘
 
 ↓
 
@@ -113,17 +124,26 @@ AthleteContext
 Coach
 ```
 
-Este flujo permite mantener desacoplados:
+El cálculo se realiza sobre una serie temporal diaria continua, lo que permite representar correctamente los periodos de entrenamiento y descanso.
 
-- el historial
-- los algoritmos
-- el Coach
+---
+
+# Serie temporal de entrenamiento
+
+El historial del atleta se transforma en una serie diaria continua antes de realizar cualquier cálculo fisiológico.
+
+Durante este proceso:
+
+- Las fechas se normalizan.
+- Los entrenamientos del mismo día se agregan.
+- Los días sin entrenamiento se incorporan automáticamente con carga 0.
+- La serie se ordena cronológicamente.
+
+Esta representación reproduce el comportamiento esperado de los modelos fisiológicos basados en medias exponenciales.
 
 ---
 
 # Modelos implementados
-
-Actualmente existen los siguientes modelos.
 
 ## TrainingLoadResult
 
@@ -154,20 +174,20 @@ notes = "Modelo de Bannister."
 
 ## TrainingLoadSeries
 
-Representa una serie temporal de cargas de entrenamiento.
+Representa una serie temporal diaria de cargas de entrenamiento.
 
 Cada elemento contiene:
 
 - Fecha.
 - Valor de carga.
 
-Su objetivo es alimentar los algoritmos fisiológicos.
+Es la entrada utilizada por todos los algoritmos fisiológicos.
 
 ---
 
 ## TrainingStatus
 
-Representa el estado fisiológico del atleta.
+Representa el estado fisiológico actual del atleta.
 
 Actualmente contiene:
 
@@ -178,7 +198,7 @@ Actualmente contiene:
 - Fatigue Score
 - Recovery Score
 
-Aunque algunos valores todavía se encuentran en desarrollo, el modelo ya está integrado en toda la arquitectura.
+Este modelo forma parte del `AthleteContext` y es consumido por el resto de la aplicación.
 
 ---
 
@@ -186,112 +206,79 @@ Aunque algunos valores todavía se encuentran en desarrollo, el modelo ya está 
 
 ## TRIMP (Bannister)
 
-Estado:
+**Estado:** ✔ Implementado.
 
-✔ Implementado.
+Calcula la carga del entrenamiento utilizando:
 
-Se calcula utilizando:
+- Duración.
+- Frecuencia cardíaca.
+- Frecuencia cardíaca máxima.
+- Frecuencia cardíaca en reposo.
 
-- duración
-- frecuencia cardíaca
-- frecuencia cardíaca máxima
-- frecuencia cardíaca en reposo
-
-Devuelve un objeto:
-
-```
-TrainingLoadResult
-```
-
----
-
-## TSS
-
-Estado:
-
-Lectura desde TrainingPeaks.
-
-Actualmente el sistema puede utilizar el TSS existente en el historial cuando está disponible.
-
-El cálculo propio de TSS será implementado en futuras versiones.
+Devuelve un objeto `TrainingLoadResult`.
 
 ---
 
 ## ATL (Acute Training Load)
 
-Estado:
+**Estado:** ✔ Implementado.
 
-✔ Integrado.
+Calcula la carga aguda mediante una media exponencial con una constante temporal de **7 días**.
 
-Actualmente utiliza la serie temporal de carga generada por:
-
-```
-TrainingLoadSeriesBuilder
-```
-
-En próximas versiones se implementará el cálculo completo mediante media exponencial de 7 días.
+Representa la carga reciente soportada por el atleta.
 
 ---
 
-# Algoritmos planificados
+## CTL (Chronic Training Load)
 
-Las siguientes versiones incorporarán:
+**Estado:** ✔ Implementado.
 
-## CTL
+Calcula la carga crónica mediante una media exponencial con una constante temporal de **42 días**.
 
-Chronic Training Load.
-
-Media exponencial de aproximadamente 42 días.
+Representa la adaptación fisiológica acumulada del atleta.
 
 ---
 
-## TSB
+## TSB (Training Stress Balance)
 
-Training Stress Balance.
+**Estado:** ✔ Implementado.
 
-Se calculará mediante:
+Se obtiene mediante:
 
 ```
 TSB = CTL - ATL
 ```
 
-Representará el equilibrio entre forma física y fatiga.
+Representa el equilibrio entre la forma física y la fatiga acumulada.
+
+Valores positivos suelen indicar un atleta más recuperado.
+
+Valores negativos suelen indicar una carga reciente elevada.
 
 ---
 
-## Fatigue Score
+## ExponentialLoadCalculator
 
-Indicador simplificado de fatiga acumulada.
+**Estado:** ✔ Implementado.
 
-Se obtendrá combinando:
+Es el componente reutilizable encargado de calcular medias exponenciales.
 
-- ATL
-- CTL
-- TSB
+Actualmente es utilizado por:
 
----
+- ATLCalculator
+- CTLCalculator
 
-## Recovery Score
-
-Indicador del nivel de recuperación del atleta.
-
-Permitirá al Coach ajustar la intensidad de los entrenamientos recomendados.
+Centralizar este algoritmo evita duplicación de código y garantiza consistencia entre ambos cálculos.
 
 ---
 
-## Fitness Score
+## TSS
 
-Indicador global del estado de forma.
+**Estado:** Lectura desde TrainingPeaks.
 
-Será calculado principalmente a partir del CTL.
+Actualmente el sistema puede utilizar el TSS existente en el historial cuando está disponible.
 
----
-
-## HRTSS
-
-Heart Rate Training Stress Score.
-
-Permitirá estimar la carga cuando no existan datos de potencia.
+El cálculo propio de TSS se implementará en futuras versiones.
 
 ---
 
@@ -322,6 +309,10 @@ ATLCalculator
 
 ↓
 
+CTLCalculator
+
+↓
+
 TrainingStatusBuilder
 
 ↓
@@ -345,18 +336,17 @@ Simplemente interpreta la información recibida.
 
 Actualmente utiliza:
 
-- tipo de entrenamiento
-- carga del entrenamiento
+- Tipo de entrenamiento.
+- Carga del entrenamiento.
+- Historial resumido.
 
-En próximas versiones utilizará además:
+El siguiente sprint incorporará reglas basadas en:
 
-- ATL
-- CTL
-- TSB
-- Fatigue Score
-- Recovery Score
-
-para generar recomendaciones mucho más personalizadas.
+- ATL.
+- CTL.
+- TSB.
+- Fatigue Score.
+- Recovery Score.
 
 ---
 
@@ -366,10 +356,11 @@ El módulo Physiology debe cumplir siempre las siguientes reglas:
 
 - Una responsabilidad por clase.
 - Cada algoritmo debe ser independiente.
+- Los algoritmos trabajan sobre modelos de dominio.
 - Ningún algoritmo accede directamente al historial CSV.
-- Todos los algoritmos trabajan sobre modelos de dominio.
 - El Coach nunca calcula fisiología.
 - El DataEngine es el único encargado de integrar los resultados.
+- Los algoritmos reutilizables deben compartirse siempre que sea posible.
 
 ---
 
@@ -383,9 +374,15 @@ Actualmente el motor fisiológico dispone de:
 
 ✔ TrainingLoadSeries
 
-✔ TrainingLoadSeriesBuilder
+✔ Serie temporal diaria continua
+
+✔ ExponentialLoadCalculator
 
 ✔ ATLCalculator
+
+✔ CTLCalculator
+
+✔ TSB
 
 ✔ TrainingStatus
 
@@ -395,20 +392,19 @@ Actualmente el motor fisiológico dispone de:
 
 ✔ Integración con AthleteContext
 
-✔ Integración con Coach
+✔ Exposición mediante la API
 
 ---
 
 # Próximas fases
 
-El siguiente sprint implementará:
+El siguiente sprint incorporará:
 
-- CTL
-- TSB
-- Fatigue Score
-- Recovery Score
-- Fitness Score
-- Cálculo propio de TSS
-- HRTSS
+- Fatigue Score.
+- Recovery Score.
+- Fitness Score.
+- Reglas fisiológicas para el Coach.
+- Cálculo propio de TSS.
+- HRTSS.
 
-Con estos componentes el motor fisiológico estará preparado para alimentar al futuro Coach IA con información objetiva sobre el estado del atleta.
+Con estos componentes el motor fisiológico proporcionará una descripción más completa del estado del atleta y permitirá generar recomendaciones cada vez más personalizadas.
