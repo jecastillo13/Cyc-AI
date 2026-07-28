@@ -4,30 +4,43 @@
 
 Cyc-AI está diseñado siguiendo una arquitectura modular basada en responsabilidades.
 
-Cada módulo tiene una única función, evita dependencias innecesarias y trabaja con modelos de dominio bien definidos.
+Cada componente tiene una única responsabilidad y se comunica mediante modelos de dominio, evitando dependencias innecesarias entre módulos.
 
-El objetivo es construir un motor de análisis de entrenamiento escalable, mantenible y preparado para incorporar algoritmos fisiológicos e inteligencia artificial.
+La arquitectura está preparada para crecer incorporando nuevos algoritmos fisiológicos, motores de inteligencia artificial e integraciones externas sin modificar el núcleo del sistema.
 
 ---
 
-# Flujo principal
+# Principios de diseño
+
+- Una responsabilidad por clase.
+- Separación estricta entre API, servicios y lógica de negocio.
+- El DataEngine es el único encargado de construir el contexto del atleta.
+- El Coach nunca accede directamente a archivos FIT o CSV.
+- El motor fisiológico es independiente del Coach.
+- Los componentes intercambian modelos de dominio, nunca diccionarios.
+- El historial de entrenamiento se procesa una única vez.
+- La arquitectura debe permitir sustituir algoritmos sin modificar el resto del sistema.
+
+---
+
+# Flujo principal del sistema
 
 ```
-FIT
+FIT / FIT.GZ
         │
         ▼
-API
+FastAPI
         │
         ▼
 TrainingService
         │
-        ├──────────────► WorkoutHistory
-        │                     │
-        │                     ▼
-        │            WorkoutHistoryAnalyzer
-        │                     │
-        │                     ▼
-        │             HistorySummary
+        ├─────────────────────────────► WorkoutHistory
+        │                                      │
+        │                                      ▼
+        │                           WorkoutHistoryAnalyzer
+        │                                      │
+        │                                      ▼
+        │                              HistorySummary
         │
         ▼
 FitImporter
@@ -39,7 +52,27 @@ FitReader
 WorkoutAnalyzer
         │
         ▼
+TrainingLoadCalculator
+        │
+        ▼
+TrainingLoadResult
+        │
+        ▼
 DataEngine
+        │
+        ├──────────────► TrainingLoadSeriesBuilder
+        │                           │
+        │                           ▼
+        │                  TrainingLoadSeries
+        │                           │
+        │                           ▼
+        │                    ATLCalculator
+        │                           │
+        │                           ▼
+        │                 TrainingStatusBuilder
+        │                           │
+        │                           ▼
+        │                  TrainingStatus
         │
         ▼
 AthleteContext
@@ -53,88 +86,122 @@ Respuesta JSON
 
 ---
 
-# Estructura del proyecto
+# Arquitectura del proyecto
 
 ```
 app/
 
 analytics/
-    Obtención y análisis de datos de entrenamiento.
-    Incluye el procesamiento del historial y métricas.
+    Procesamiento del historial y métricas.
 
 api/
-    Endpoints de FastAPI.
+    Endpoints FastAPI.
 
 coach/
-    Clasificación del entrenamiento y generación de recomendaciones.
+    Clasificación del entrenamiento y generación
+    de recomendaciones.
 
 engine/
     Construcción del AthleteContext.
 
 fit/
-    Importación y lectura de archivos FIT.
+    Lectura e importación de archivos FIT/FIT.GZ.
 
 models/
-    Modelos de dominio utilizados por todo el sistema.
+    Modelos de dominio.
 
 physiology/
-    Modelos y algoritmos fisiológicos.
+    Algoritmos fisiológicos.
 
 services/
-    Casos de uso y orquestación del flujo principal.
+    Casos de uso.
 
 users/
-    Gestión de perfiles de usuario.
+    Gestión del perfil del atleta.
 ```
 
 ---
 
-# Principios de diseño
+# Modelos de dominio
 
-- Una responsabilidad por clase.
-- La API nunca contiene lógica de negocio.
-- Los servicios coordinan procesos.
-- El DataEngine construye el contexto completo del atleta.
-- El Coach interpreta la información y genera recomendaciones.
-- Physiology calcula métricas fisiológicas.
-- Analytics obtiene y procesa datos.
-- Los modelos representan el dominio del sistema.
-- Los componentes intercambian modelos de dominio, no diccionarios.
-- Ningún componente del núcleo debe acceder directamente a los archivos CSV.
-
----
-
-# Modelos principales
-
-Actualmente el núcleo del sistema está compuesto por los siguientes modelos:
+Actualmente el sistema utiliza los siguientes modelos principales.
 
 ```
 Athlete
 Workout
 TrainingLoadResult
 HistorySummary
+TrainingStatus
 AthleteContext
 ```
 
-En futuras versiones se incorporarán:
+Cada modelo representa una parte del dominio del entrenamiento y evita el uso de estructuras de datos genéricas.
+
+---
+
+# Motor fisiológico
+
+El motor fisiológico está completamente desacoplado del Coach.
+
+Su responsabilidad es transformar el historial del atleta en un estado fisiológico.
+
+Actualmente el flujo es:
 
 ```
-MetricsSummary
+WorkoutHistory
+        │
+        ▼
+TrainingLoadSeriesBuilder
+        │
+        ▼
+TrainingLoadSeries
+        │
+        ▼
+ATLCalculator
+        │
+        ▼
+TrainingStatusBuilder
+        │
+        ▼
 TrainingStatus
 ```
+
+En futuras versiones este flujo incorporará:
+
+```
+CTLCalculator
+
+↓
+
+TSBCalculator
+
+↓
+
+FatigueCalculator
+
+↓
+
+RecoveryCalculator
+```
+
+sin modificar el resto del sistema.
 
 ---
 
 # Flujo de datos
+
+El flujo completo de construcción del contexto es:
 
 ```
 Athlete
         │
 Workout
         │
-TrainingLoad
+TrainingLoadResult
         │
 HistorySummary
+        │
+TrainingStatus
         │
 Metrics
         │
@@ -148,95 +215,127 @@ Coach
 Respuesta JSON
 ```
 
+El Coach únicamente interpreta el contexto.
+
+Nunca realiza cálculos fisiológicos.
+
 ---
 
-# History Processing
+# Procesamiento del historial
 
-El historial de entrenamientos ya no se utiliza directamente desde un diccionario.
-
-El flujo actual es:
+El historial de entrenamientos se procesa en varias etapas.
 
 ```
 WorkoutHistory
-        │
-        ▼
+
+↓
+
+DataFrame
+
+↓
+
 WorkoutHistoryAnalyzer
-        │
-        ▼
+
+↓
+
 HistorySummary
-        │
-        ▼
-AthleteContext
-        │
-        ▼
-Coach
 ```
 
-Este diseño desacopla completamente el acceso al archivo CSV del resto del sistema.
+El resultado se utiliza tanto por el Coach como por el motor fisiológico.
 
-El Coach y el motor fisiológico trabajan únicamente con el objeto `HistorySummary`, sin conocer cómo se almacenan los datos.
-
----
-
-# Responsabilidad de cada componente
-
-## WorkoutHistory
-
-Carga el historial de entrenamientos desde el archivo CSV y devuelve un DataFrame.
+Ningún componente del sistema accede directamente al CSV.
 
 ---
 
-## WorkoutHistoryAnalyzer
+# DataEngine
 
-Procesa el historial de entrenamientos y genera un objeto `HistorySummary`.
+El DataEngine es el núcleo de integración del sistema.
 
----
+Es el único componente responsable de construir el contexto completo del atleta.
 
-## DataEngine
-
-Construye el contexto completo del atleta.
-
-Es el único componente encargado de crear:
+Actualmente crea automáticamente:
 
 - Athlete
 - Workout
 - TrainingLoadResult
 - HistorySummary
+- TrainingStatus
 - AthleteContext
 
----
-
-## AthleteContext
-
-Contiene toda la información necesaria para que el Coach y futuros motores de IA puedan tomar decisiones sin acceder directamente a archivos o fuentes externas.
+Esto garantiza que todos los motores trabajen sobre la misma información.
 
 ---
 
-## Coach
+# AthleteContext
 
-Interpreta el contexto del atleta y genera recomendaciones.
+AthleteContext representa el estado completo del atleta durante el análisis de un entrenamiento.
 
-El Coach nunca accede directamente al historial, al archivo FIT o a los CSV.
+Actualmente contiene:
 
-Toda la información necesaria debe llegar mediante `AthleteContext`.
+- Athlete
+- Workout
+- TrainingLoadResult
+- HistorySummary
+- TrainingStatus
+- Metrics
+
+El objetivo es que cualquier componente del sistema pueda tomar decisiones únicamente utilizando este objeto.
 
 ---
 
-# Estado actual de la arquitectura
+# Coach
+
+El Coach interpreta el contexto construido por el DataEngine.
+
+Actualmente utiliza:
+
+- Workout
+- TrainingLoadResult
+- HistorySummary
+
+En próximas versiones utilizará además:
+
+- TrainingStatus
+- ATL
+- CTL
+- TSB
+- Fatigue Score
+- Recovery Score
+
+para generar recomendaciones fisiológicas más precisas.
+
+---
+
+# Estado actual del proyecto
 
 Actualmente Cyc-AI dispone de:
 
-- Lectura de archivos FIT.
-- Análisis del entrenamiento.
-- Cálculo automático de TRIMP.
-- Construcción del contexto del atleta.
+- Lectura de archivos FIT y FIT.GZ.
+- Procesamiento automático del entrenamiento.
+- Cálculo de TRIMP mediante el modelo de Bannister.
+- Construcción del AthleteContext.
 - Procesamiento del historial de entrenamientos.
-- Resumen inteligente del historial mediante `HistorySummary`.
-- Motor de recomendaciones basado en contexto.
+- Generación de HistorySummary.
+- Pipeline fisiológico inicial.
+- TrainingLoadSeries.
+- TrainingStatus.
+- Integración completa con DataEngine.
+- Recomendaciones del Coach.
+- API REST mediante FastAPI.
 
-La siguiente fase del proyecto incorporará:
+---
 
-- Acute Training Load (ATL)
+# Próximas fases
+
+Las siguientes versiones incorporarán:
+
 - Chronic Training Load (CTL)
 - Training Stress Balance (TSB)
-- Motor avanzado de IA para recomendaciones fisiológicas.
+- Fatigue Score
+- Recovery Score
+- Fitness Score
+- Motor avanzado de IA
+- Predicción de rendimiento
+- Planificación inteligente del entrenamiento
+
+La arquitectura actual ya está preparada para incorporar estos componentes sin modificar la estructura principal del sistema.

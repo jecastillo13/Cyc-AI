@@ -1,83 +1,231 @@
 # Roadmap de Cyc-AI
 
+Este documento describe el estado del desarrollo del proyecto y la planificación de las siguientes fases.
+
+---
+
+# Visión del proyecto
+
+Cyc-AI pretende convertirse en un entrenador inteligente capaz de interpretar los entrenamientos de un ciclista utilizando:
+
+- Datos del entrenamiento.
+- Historial deportivo.
+- Estado fisiológico.
+- Inteligencia Artificial.
+
+La arquitectura está diseñada para crecer sin modificar el núcleo del sistema.
+
+---
+
+# Sprint 1 — Base del proyecto
+
 ## Arquitectura
 
 - [x] FastAPI
 - [x] API modular
-- [x] TrainingService
-- [x] DataEngine
+- [x] Separación por capas
 - [x] Domain Models
-- [x] AthleteContext
+- [x] Services
 - [x] Coach
-- [x] Motor de usuarios
-- [x] HistorySummary
-- [x] WorkoutHistoryAnalyzer
+- [x] DataEngine
+- [x] AthleteContext
 
 ---
 
-## Importación de datos
+# Sprint 2 — Lectura de entrenamientos
 
-- [x] Lectura FIT
-- [x] Lectura FIT.GZ
-- [x] Resumen del entrenamiento
-- [x] Historial de entrenamientos (CSV)
-- [x] Métricas del atleta (CSV)
+## FIT
+
+- [x] Lectura de archivos FIT
+- [x] Lectura de archivos FIT.GZ
+- [x] FitImporter
+- [x] FitReader
+- [x] WorkoutAnalyzer
 
 ---
+
+# Sprint 3 — Historial
 
 ## Analytics
 
-- [x] WorkoutAnalyzer
+- [x] WorkoutHistory
 - [x] WorkoutHistoryAnalyzer
 - [x] HistorySummary
-- [ ] MetricsSummary
+- [x] Integración con AthleteContext
+- [x] Integración con DataEngine
+- [x] Exposición mediante la API
+
+Pendiente:
+
 - [ ] Tendencias del historial
 - [ ] Análisis de progresión
+- [ ] Resumen mensual
+- [ ] Resumen anual
 
 ---
 
-## Motor fisiológico
+# Sprint 4 — Carga de entrenamiento
+
+## Training Load
+
+Implementado:
 
 - [x] Heart Rate Reserve
-- [x] TrainingLoad
-- [x] TSS (lectura desde FIT)
+- [x] TrainingLoadCalculator
+- [x] TrainingLoadResult
 - [x] TRIMP (Bannister)
-- [ ] Cálculo de TSS
+- [x] Lectura de TSS desde TrainingPeaks
+- [x] Selección automática del método de carga
+- [x] Integración con Coach
+
+Pendiente:
+
+- [ ] Cálculo propio de TSS
 - [ ] HRTSS
-- [ ] Acute Training Load (ATL)
-- [ ] Chronic Training Load (CTL)
-- [ ] Training Stress Balance (TSB)
-- [ ] Recovery Score
+- [ ] Session RPE
+
+---
+
+# Sprint 5 — Motor fisiológico
+
+## Modelos
+
+Implementado:
+
+- [x] TrainingLoadSeries
+- [x] TrainingStatus
+
+---
+
+## Builders
+
+Implementado:
+
+- [x] TrainingLoadSeriesBuilder
+- [x] TrainingStatusBuilder
+
+---
+
+## Algoritmos
+
+Implementado:
+
+- [x] ATLCalculator (estructura integrada)
+
+Pendiente:
+
+- [ ] Cálculo exponencial completo de ATL
+
+---
+
+## Integración
+
+Implementado:
+
+- [x] Integración con DataEngine
+- [x] Integración con AthleteContext
+- [x] Integración con Coach
+- [x] Endpoint `/fit/upload` funcionando correctamente
+
+---
+
+# Sprint 6 — Estado fisiológico
+
+Objetivo:
+
+Convertir el historial del atleta en un estado fisiológico completo.
+
+## Implementar
+
+- [ ] ATL (media exponencial 7 días)
+- [ ] CTL (media exponencial 42 días)
+- [ ] TSB
 - [ ] Fatigue Score
+- [ ] Recovery Score
 - [ ] Fitness Score
 
+Resultado esperado:
+
+```
+WorkoutHistory
+
+↓
+
+TrainingLoadSeries
+
+↓
+
+ATL
+
+↓
+
+CTL
+
+↓
+
+TSB
+
+↓
+
+TrainingStatus
+```
+
 ---
 
-## Coach
+# Sprint 7 — Coach avanzado
 
-- [x] Clasificador básico
-- [x] Recomendaciones simples
-- [x] Integración con TrainingLoad
-- [ ] Uso de HistorySummary
-- [ ] Reglas fisiológicas
-- [ ] Detección de sobreentrenamiento
-- [ ] Planificador semanal
-- [ ] Recomendaciones personalizadas
+## Reglas fisiológicas
+
+Pendiente:
+
+- [ ] Utilizar ATL
+- [ ] Utilizar CTL
+- [ ] Utilizar TSB
+- [ ] Detectar sobreentrenamiento
+- [ ] Detectar falta de carga
+- [ ] Recomendar recuperación
+- [ ] Recomendar entrenamiento de calidad
+- [ ] Ajustar intensidad semanal
 
 ---
 
-## Inteligencia Artificial
+# Sprint 8 — Inteligencia Artificial
 
-- [ ] Coach IA
+## Coach IA
+
+Pendiente:
+
 - [ ] Explicaciones inteligentes
-- [ ] Predicción de rendimiento
 - [ ] Predicción de fatiga
-- [ ] Planificador de entrenamientos
+- [ ] Predicción de rendimiento
 - [ ] Ajuste automático de carga
+- [ ] Planificador semanal
+- [ ] Planificador mensual
 
 ---
 
-## Integraciones
+# Sprint 9 — Dashboard
+
+## Visualización
+
+Pendiente:
+
+- [ ] Estado fisiológico
+- [ ] Historial
+- [ ] Tendencias
+- [ ] ATL
+- [ ] CTL
+- [ ] TSB
+- [ ] Recovery
+- [ ] Fatigue
+- [ ] Fitness
+- [ ] Gráficas
+
+---
+
+# Sprint 10 — Integraciones
+
+Pendiente:
 
 - [ ] Garmin Connect
 - [ ] Strava
@@ -86,37 +234,67 @@
 
 ---
 
-## Dashboard
+# Testing
 
-- [ ] Estadísticas
-- [ ] Tendencias
-- [ ] Historial
-- [ ] Comparativas
-- [ ] Gráficos
-- [ ] Estado fisiológico
-- [ ] Carga de entrenamiento
-
----
-
-## Testing
+## Completado
 
 - [x] Pytest
+- [x] Pruebas manuales mediante Swagger
+- [x] Flujo completo `/fit/upload`
+
+Pendiente:
+
 - [ ] Cobertura de Analytics
 - [ ] Cobertura de Physiology
 - [ ] Cobertura del Coach
-- [ ] Cobertura de la API
-- [ ] Integración continua (CI)
+- [ ] Cobertura de API
+- [ ] Integración Continua (CI)
 
 ---
 
-## Documentación
+# Documentación
+
+Completado:
 
 - [x] README
 - [x] Arquitectura
 - [x] Roadmap
 - [x] Changelog
 - [x] API
-- [x] Fisiología
+- [x] Motor fisiológico
 - [x] IA
 - [x] Glosario
 - [x] Desarrollo
+
+---
+
+# Estado actual del proyecto
+
+Actualmente Cyc-AI es capaz de:
+
+- Leer archivos FIT y FIT.GZ.
+- Analizar entrenamientos automáticamente.
+- Calcular TRIMP mediante el modelo de Bannister.
+- Leer el historial de TrainingPeaks.
+- Construir un HistorySummary.
+- Construir un TrainingStatus.
+- Integrar el contexto completo mediante DataEngine.
+- Generar recomendaciones mediante el Coach.
+- Exponer toda la información mediante FastAPI.
+
+---
+
+# Próximo objetivo
+
+El siguiente sprint estará dedicado exclusivamente al motor fisiológico.
+
+Objetivos:
+
+1. Implementar ATL real.
+2. Implementar CTL.
+3. Implementar TSB.
+4. Calcular Fatigue Score.
+5. Calcular Recovery Score.
+6. Integrar estas métricas en el Coach.
+
+Este será el paso que convertirá a Cyc-AI de un analizador de entrenamientos a un entrenador inteligente capaz de interpretar el estado fisiológico del atleta.
