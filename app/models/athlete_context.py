@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from app.models.athlete import Athlete
 from app.models.workout import Workout
 from app.models.history_summary import HistorySummary
+from app.models.training_status import TrainingStatus
 
 from app.physiology.models.training_load_result import TrainingLoadResult
 
@@ -25,5 +26,7 @@ class AthleteContext:
     training_load: TrainingLoadResult
 
     history_summary: HistorySummary
+
+    training_status: TrainingStatus
 
     metrics: dict

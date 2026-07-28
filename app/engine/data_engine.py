@@ -5,6 +5,7 @@ from app.models.workout import Workout
 from app.models.athlete_context import AthleteContext
 
 from app.physiology.training_load import TrainingLoad
+from app.physiology.training_status_builder import TrainingStatusBuilder
 
 
 class DataEngine:
@@ -17,6 +18,7 @@ class DataEngine:
 
         self.training_load = TrainingLoad()
         self.history_analyzer = WorkoutHistoryAnalyzer()
+        self.training_status_builder = TrainingStatusBuilder()
 
     def build(self, profile, summary, history, metrics):
 
@@ -48,11 +50,17 @@ class DataEngine:
 
         history_summary = self.history_analyzer.analyze(history)
 
+        training_status = self.training_status_builder.build(
+            history,
+            training_load
+        )
+
         context = AthleteContext(
             athlete=athlete,
             workout=workout,
             training_load=training_load,
             history_summary=history_summary,
+            training_status=training_status,
             metrics=metrics
         )
 
