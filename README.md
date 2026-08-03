@@ -9,9 +9,10 @@ genera una recomendación basada en el entrenamiento y el estado reciente del at
 - Lectura de archivos FIT y FIT.GZ.
 - Resumen de distancia, duración, frecuencia cardíaca, potencia, velocidad y cadencia.
 - Cálculo de carga mediante TSS cuando está disponible o TRIMP como alternativa.
-- Cálculo de ATL, CTL, TSB, fatiga y recuperación.
+- Cálculo de ATL, CTL, TSB, fatiga, recuperación y fitness.
 - Resumen del historial exportado desde TrainingPeaks.
-- Recomendaciones del Coach basadas en reglas fisiológicas.
+- Recomendaciones explicadas, predicciones heurísticas y planes de 1 a 4 semanas.
+- Dashboard visual y series de carga para gráficas.
 - API REST y documentación OpenAPI con FastAPI.
 
 > El Coach actual utiliza reglas deterministas. La integración con un modelo de IA
@@ -50,6 +51,17 @@ uvicorn app.main:app --reload
 - API: http://127.0.0.1:8000
 - Estado: http://127.0.0.1:8000/health
 - Swagger: http://127.0.0.1:8000/docs
+- Dashboard: http://127.0.0.1:8000/dashboard/ui
+
+Frontend completo:
+
+```bash
+cd frontend
+npm run dev
+```
+
+La interfaz usa `NEXT_PUBLIC_API_URL` cuando está definido y, en desarrollo,
+se conecta por defecto a `http://127.0.0.1:8000`.
 
 ## Uso
 
@@ -86,5 +98,5 @@ tests/         Pruebas automatizadas
 
 ## Estado
 
-Versión actual: `0.2.0`. El proyecto es un prototipo funcional y no sustituye la
+Versión actual: `1.0.0`. El proyecto es una primera versión funcional y no sustituye la
 orientación de un entrenador ni de un profesional de salud.

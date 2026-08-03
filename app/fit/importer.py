@@ -19,8 +19,13 @@ class FitImporter:
                 suffix=".fit"
             )
 
-            with gzip.open(str(ruta), "rb") as origen:
-                shutil.copyfileobj(origen, temporal)
+            try:
+                with gzip.open(str(ruta), "rb") as origen:
+                    shutil.copyfileobj(origen, temporal)
+            except (gzip.BadGzipFile, EOFError, OSError) as exc:
+                temporal.close()
+                Path(temporal.name).unlink(missing_ok=True)
+                raise ValueError("El archivo .fit.gz no contiene datos GZIP válidos.") from exc
 
             temporal.close()
 

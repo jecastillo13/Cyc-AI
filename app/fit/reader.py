@@ -10,6 +10,14 @@ class FitReader:
 
         registros = []
 
+        try:
+            return self._read_frames()
+        except fitdecode.FitError as exc:
+            raise ValueError("El archivo FIT está corrupto o no tiene un formato válido.") from exc
+
+    def _read_frames(self):
+        registros = []
+
         with fitdecode.FitReader(self.filename) as fit:
 
             for frame in fit:

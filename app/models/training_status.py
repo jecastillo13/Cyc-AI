@@ -19,3 +19,6 @@ class TrainingStatus:
     tsb: float
     fatigue_score: float
     recovery_score: float
+    fitness_score: float
+    readiness: str
+    injury_risk: str

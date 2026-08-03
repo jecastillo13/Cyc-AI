@@ -32,11 +32,26 @@ class Coach:
         recommendation = self.recommendation_engine.recommend(
             workout_type,
             self.context.training_status,
+            training_load.value,
+        )
+
+        status = self.context.training_status
+        fatigue_prediction = min(100.0, status.fatigue_score + training_load.value * 0.08)
+        performance_prediction = max(0.0, min(100.0, status.fitness_score + status.tsb * 0.4))
+        explanation = (
+            f"Carga {training_load.value:.1f} por {training_load.method}; "
+            f"ATL {status.atl:.1f}, CTL {status.ctl:.1f} y TSB {status.tsb:.1f}. "
+            f"La disponibilidad es {status.readiness} y el riesgo estimado es {status.injury_risk}."
         )
 
         return {
             "tipo_entrenamiento": workout_type,
             "recomendacion": recommendation,
+            "explicacion": explanation,
+            "predicciones": {
+                "fatiga_proxima_sesion": round(fatigue_prediction, 2),
+                "rendimiento_actual": round(performance_prediction, 2),
+            },
             "training_load": {
                 "method": training_load.method,
                 "value": training_load.value,

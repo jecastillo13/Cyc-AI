@@ -24,3 +24,9 @@ class HistorySummary:
     average_distance: float
 
     average_duration: float
+    monthly_workouts: int = 0
+    yearly_workouts: int = 0
+    load_last_7_days: float = 0.0
+    load_last_28_days: float = 0.0
+    load_trend_percent: float = 0.0
+    progression: str = "stable"

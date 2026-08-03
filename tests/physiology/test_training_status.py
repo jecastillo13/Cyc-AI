@@ -12,3 +12,6 @@ def test_training_status_calculates_fatigue_and_recovery():
     assert status.ctl == 100
     assert status.fatigue_score == 50
     assert status.recovery_score == 50
+    assert status.fitness_score == 100
+    assert status.readiness == "moderate"
+    assert status.injury_risk == "low"

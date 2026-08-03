@@ -40,7 +40,9 @@ class DataEngine:
             avg_power=summary["potencia_media"],
             max_power=summary["potencia_max"],
             avg_speed=summary["velocidad_media"],
-            avg_cadence=summary["cadencia_media"]
+            avg_cadence=summary["cadencia_media"],
+            tss=summary.get("tss"),
+            rpe=summary.get("rpe"),
         )
 
         training_load = self.training_load.calculate(

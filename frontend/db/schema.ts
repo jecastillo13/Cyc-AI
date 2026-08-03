@@ -1,0 +1,48 @@
+import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  passwordHash: text("password_hash").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+export const sessions = sqliteTable("sessions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
+
+export const connections = sqliteTable("connections", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(),
+  providerUserId: text("provider_user_id").notNull(),
+  displayName: text("display_name"),
+  scopes: text("scopes").notNull(),
+  accessTokenEncrypted: text("access_token_encrypted").notNull(),
+  refreshTokenEncrypted: text("refresh_token_encrypted").notNull(),
+  tokenExpiresAt: integer("token_expires_at", { mode: "timestamp_ms" }).notNull(),
+  connectedAt: integer("connected_at", { mode: "timestamp_ms" }).notNull(),
+  lastSyncAt: integer("last_sync_at", { mode: "timestamp_ms" }),
+}, table => [uniqueIndex("idx_connections_user_provider").on(table.userId, table.provider)]);
+
+export const activities = sqliteTable("activities", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(),
+  externalId: text("external_id").notNull(),
+  sportType: text("sport_type").notNull(),
+  name: text("name").notNull(),
+  startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
+  durationSeconds: integer("duration_seconds").notNull(),
+  distanceMeters: integer("distance_meters").notNull(),
+  elevationMeters: integer("elevation_meters"),
+  averageHeartRate: integer("average_heart_rate"),
+  averagePower: integer("average_power"),
+  syncedAt: integer("synced_at", { mode: "timestamp_ms" }).notNull(),
+}, table => [uniqueIndex("idx_activities_provider_external").on(table.provider, table.externalId)]);

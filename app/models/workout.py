@@ -19,3 +19,4 @@ class Workout:
     tss: float | None = None
     intensity_factor: float | None = None
     energy: float | None = None
+    rpe: float | None = None

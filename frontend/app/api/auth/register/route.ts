@@ -1,0 +1,8 @@
+import { cookies } from "next/headers";
+import { eq } from "drizzle-orm";
+import { getDb } from "../../../../db";
+import { sessions, users } from "../../../../db/schema";
+import { hashPassword } from "../../../server/passwords";
+import { hashToken, SESSION_COOKIE } from "../../../server/current-user";
+export async function POST(request:Request){const body=await request.json() as {email?:string;password?:string;displayName?:string};const email=body.email?.trim().toLowerCase()||"";const password=body.password||"";const displayName=body.displayName?.trim()||"";if(!/^\S+@\S+\.\S+$/.test(email)||password.length<8||displayName.length<2)return Response.json({error:"Completa el nombre, un correo válido y una contraseña de 8 caracteres."},{status:400});const db=getDb();if((await db.select({id:users.id}).from(users).where(eq(users.email,email)).limit(1))[0])return Response.json({error:"Ese correo ya está registrado."},{status:409});const now=new Date();const userId=crypto.randomUUID();await db.insert(users).values({id:userId,email,displayName,passwordHash:await hashPassword(password),createdAt:now,updatedAt:now});await createSession(userId);return Response.json({ok:true},{status:201})}
+async function createSession(userId:string){const token=crypto.randomUUID()+crypto.randomUUID();const now=new Date();const expiresAt=new Date(now.getTime()+30*24*3600_000);await getDb().insert(sessions).values({id:crypto.randomUUID(),userId,tokenHash:await hashToken(token),expiresAt,createdAt:now});(await cookies()).set(SESSION_COOKIE,token,{httpOnly:true,secure:true,sameSite:"lax",path:"/",expires:expiresAt})}

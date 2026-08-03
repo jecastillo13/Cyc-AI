@@ -15,9 +15,13 @@ from app.coach.coach import Coach
 from app.engine.data_engine import DataEngine
 
 
+ROOT = Path(__file__).resolve().parents[2]
+
+
 class TrainingService:
 
     ALLOWED_SUFFIXES = (".fit", ".fit.gz")
+    MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 
     async def process_upload(self, file):
 
@@ -30,6 +34,10 @@ class TrainingService:
             shutil.copyfileobj(file.file, tmp)
             ruta_original = tmp.name
 
+        if Path(ruta_original).stat().st_size > self.MAX_UPLOAD_BYTES:
+            Path(ruta_original).unlink(missing_ok=True)
+            raise ValueError("El archivo supera el límite de 25 MB.")
+
         ruta_fit = None
 
         try:
@@ -41,24 +49,24 @@ class TrainingService:
             # Preparar FIT
             ruta_fit = FitImporter.preparar(ruta_original)
 
-            # Guardar copia
-            destino = usuario.get_fits_path() / filename
-            shutil.copy2(ruta_fit, destino)
-
             # Leer FIT
             lector = FitReader(ruta_fit)
             registros = lector.read()
+
+            # Archivar el original solo después de comprobar que es válido.
+            destino = usuario.get_fits_path() / filename
+            shutil.copy2(ruta_original, destino)
 
             # Resumen del entrenamiento
             analizador = WorkoutAnalyzer(registros)
             resumen = analizador.summary()
 
             # Historial
-            historial = WorkoutHistory("data/workouts.csv")
+            historial = WorkoutHistory(ROOT / "data" / "workouts.csv")
             historial_info = historial.load()
 
             # Métricas
-            metricas = MetricsHistory("data/metrics.csv")
+            metricas = MetricsHistory(ROOT / "data" / "metrics.csv")
             metricas_info = metricas.load()
 
             # Perfil
@@ -91,6 +99,9 @@ class TrainingService:
                     "tsb": contexto.training_status.tsb,
                     "fatigue_score": contexto.training_status.fatigue_score,
                     "recovery_score": contexto.training_status.recovery_score,
+                    "fitness_score": contexto.training_status.fitness_score,
+                    "readiness": contexto.training_status.readiness,
+                    "injury_risk": contexto.training_status.injury_risk,
                 },
 
                 "history_summary": {
@@ -102,7 +113,13 @@ class TrainingService:
                     "duration_last_7_days": contexto.history_summary.duration_last_7_days,
                     "duration_last_28_days": contexto.history_summary.duration_last_28_days,
                     "average_distance": contexto.history_summary.average_distance,
-                    "average_duration": contexto.history_summary.average_duration
+                    "average_duration": contexto.history_summary.average_duration,
+                    "monthly_workouts": contexto.history_summary.monthly_workouts,
+                    "yearly_workouts": contexto.history_summary.yearly_workouts,
+                    "load_last_7_days": contexto.history_summary.load_last_7_days,
+                    "load_last_28_days": contexto.history_summary.load_last_28_days,
+                    "load_trend_percent": contexto.history_summary.load_trend_percent,
+                    "progression": contexto.history_summary.progression,
                 },
 
                 "metricas": metricas_info

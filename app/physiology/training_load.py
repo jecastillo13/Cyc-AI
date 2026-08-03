@@ -3,6 +3,8 @@ from app.models.workout import Workout
 
 from app.physiology.calculators.tss import TSSCalculator
 from app.physiology.calculators.trimp import TRIMPCalculator
+from app.physiology.calculators.hrtss import HRTSSCalculator
+from app.physiology.calculators.session_rpe import SessionRPECalculator
 from app.physiology.models.training_load_result import TrainingLoadResult
 
 
@@ -12,6 +14,8 @@ class TrainingLoad:
 
         self.tss = TSSCalculator()
         self.trimp = TRIMPCalculator()
+        self.hrtss = HRTSSCalculator()
+        self.session_rpe = SessionRPECalculator()
 
     def calculate(
         self,
@@ -20,7 +24,7 @@ class TrainingLoad:
     ) -> TrainingLoadResult:
 
         # Prioridad 1: utilizar TSS si el entrenamiento ya lo incluye
-        if workout.tss is not None:
+        if workout.tss is not None or (workout.avg_power and athlete.ftp):
             return self.tss.calculate(
                 athlete,
                 workout
@@ -32,6 +36,9 @@ class TrainingLoad:
                 athlete,
                 workout
             )
+
+        if workout.rpe is not None:
+            return self.session_rpe.calculate(athlete, workout)
 
         # No es posible calcular la carga
         return TrainingLoadResult(

@@ -8,7 +8,8 @@ class UserManager:
 
         self.username = username
 
-        self.user_path = Path("users") / username
+        root = Path(__file__).resolve().parents[2]
+        self.user_path = root / "users" / username
         self.profile_path = self.user_path / "profile.json"
         self.fits_path = self.user_path / "fits"
 

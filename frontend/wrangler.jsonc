@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "cyc-ai",
+  "main": "./worker/index.ts",
+  "account_id": "aa4b4af99c703c33b64058b543850270",
+  "compatibility_date": "2026-08-03",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cyc-ai-db",
+      "database_id": "af57d003-1914-4df3-b797-52651c3485b6",
+      "migrations_dir": "drizzle"
+    }
+  ]
+}
