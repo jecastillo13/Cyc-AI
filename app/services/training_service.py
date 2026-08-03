@@ -17,10 +17,16 @@ from app.engine.data_engine import DataEngine
 
 class TrainingService:
 
+    ALLOWED_SUFFIXES = (".fit", ".fit.gz")
+
     async def process_upload(self, file):
 
+        filename = Path(file.filename or "").name
+        if not filename or not filename.lower().endswith(self.ALLOWED_SUFFIXES):
+            raise ValueError("Solo se permiten archivos .fit o .fit.gz.")
+
         # Guardar temporalmente el archivo
-        with tempfile.NamedTemporaryFile(delete=False, suffix=file.filename) as tmp:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=Path(filename).suffix) as tmp:
             shutil.copyfileobj(file.file, tmp)
             ruta_original = tmp.name
 
@@ -36,7 +42,7 @@ class TrainingService:
             ruta_fit = FitImporter.preparar(ruta_original)
 
             # Guardar copia
-            destino = usuario.get_fits_path() / Path(file.filename).name
+            destino = usuario.get_fits_path() / filename
             shutil.copy2(ruta_fit, destino)
 
             # Leer FIT
@@ -73,7 +79,7 @@ class TrainingService:
             analisis = coach.analyze()
 
             return {
-                "archivo": file.filename,
+                "archivo": filename,
                 "perfil": perfil,
                 "resumen": resumen,
                 "coach": analisis,

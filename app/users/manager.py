@@ -21,10 +21,12 @@ class UserManager:
 
             profile = {
                 "name": self.username,
-                "weight": None,
-                "height": None,
-                "ftp": None,
-                "birth_date": None
+                "weight": 70.0,
+                "height": 175.0,
+                "ftp": 200,
+                "birth_date": "1990-01-01",
+                "max_hr": 190,
+                "resting_hr": 60
             }
 
             self.save_profile(profile)

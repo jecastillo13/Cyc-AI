@@ -29,7 +29,10 @@ class Coach:
 
         workout_type = self.classifier.classify(summary)
 
-        recommendation = self.recommendation_engine.recommend(workout_type)
+        recommendation = self.recommendation_engine.recommend(
+            workout_type,
+            self.context.training_status,
+        )
 
         return {
             "tipo_entrenamiento": workout_type,

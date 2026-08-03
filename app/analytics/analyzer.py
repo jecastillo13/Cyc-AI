@@ -11,12 +11,10 @@ class WorkoutAnalyzer:
         ]
 
         if not registros:
-            return {
-                "error": "No hay registros de actividad"
-            }
+            raise ValueError("El archivo FIT no contiene registros de actividad.")
 
         distancia = 0
-        tiempo = 0
+        timestamps = []
 
         potencia = []
         pulso = []
@@ -29,7 +27,7 @@ class WorkoutAnalyzer:
                 distancia = max(distancia, r["distance"])
 
             if r.get("timestamp") is not None:
-                tiempo += 1
+                timestamps.append(r["timestamp"])
 
             if r.get("power") is not None:
                 potencia.append(r["power"])
@@ -42,6 +40,10 @@ class WorkoutAnalyzer:
 
             if r.get("speed") is not None:
                 velocidad.append(r["speed"])
+
+        tiempo = 0
+        if len(timestamps) >= 2:
+            tiempo = max(0, int((max(timestamps) - min(timestamps)).total_seconds()))
 
         return {
 

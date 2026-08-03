@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.services.training_service import TrainingService
 
@@ -20,4 +20,7 @@ async def upload_fit(file: UploadFile = File(...)):
 
     service = TrainingService()
 
-    return await service.process_upload(file)
+    try:
+        return await service.process_upload(file)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
