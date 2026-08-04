@@ -17,3 +17,5 @@ export async function requireApiUser() {
 
 export async function hashToken(value:string){const bytes=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value));return toBase64(new Uint8Array(bytes))}
 export function toBase64(bytes:Uint8Array){let value="";for(const byte of bytes)value+=String.fromCharCode(byte);return btoa(value)}
+
+export async function createSession(userId:string){const token=crypto.randomUUID()+crypto.randomUUID();const now=new Date();const expiresAt=new Date(now.getTime()+30*24*3600_000);await getDb().insert(sessions).values({id:crypto.randomUUID(),userId,tokenHash:await hashToken(token),expiresAt,createdAt:now});(await cookies()).set(SESSION_COOKIE,token,{httpOnly:true,secure:true,sameSite:"lax",path:"/",expires:expiresAt})}

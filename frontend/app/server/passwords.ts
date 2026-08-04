@@ -1,5 +1,0 @@
-import { toBase64 } from "./current-user";
-const ITERATIONS=210_000;
-export async function hashPassword(password:string){const salt=crypto.getRandomValues(new Uint8Array(16));return `${ITERATIONS}.${toBase64(salt)}.${toBase64(await derive(password,salt))}`}
-export async function verifyPassword(password:string,stored:string){const [iterations,saltValue,hashValue]=stored.split(".");if(Number(iterations)!==ITERATIONS||!saltValue||!hashValue)return false;const salt=Uint8Array.from(atob(saltValue),char=>char.charCodeAt(0));const actual=await derive(password,salt);const expected=Uint8Array.from(atob(hashValue),char=>char.charCodeAt(0));if(actual.length!==expected.length)return false;let difference=0;for(let index=0;index<actual.length;index++)difference|=actual[index]^expected[index];return difference===0}
-async function derive(password:string,salt:Uint8Array){const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveBits"]);const bits=await crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt,iterations:ITERATIONS},key,256);return new Uint8Array(bits)}
