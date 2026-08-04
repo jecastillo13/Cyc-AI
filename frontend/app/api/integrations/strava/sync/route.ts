@@ -4,6 +4,7 @@ import { activities, connections } from "../../../../../db/schema";
 import { requireApiUser } from "../../../../server/current-user";
 import { decryptSecret, encryptSecret } from "../../../../server/secrets";
 import { stravaConfig } from "../../../../server/strava-config";
+import { analyzeStravaStreams } from "../../../../server/strava-streams";
 
 type StravaActivity = {
   id: number;
@@ -64,6 +65,9 @@ export async function POST() {
     if (!response.ok) return Response.json({ error: "Unable to read Strava activities" }, { status: 502 });
     const rows = (await response.json()) as StravaActivity[];
     const now = new Date();
+    const existing = await db.select({externalId:activities.externalId,streamAnalyzedAt:activities.streamAnalyzedAt}).from(activities).where(and(eq(activities.userId,user.userId),eq(activities.provider,"strava")));
+    const analyzed=new Map(existing.map(item=>[item.externalId,item.streamAnalyzedAt]));
+    let streamsAnalyzed=0;
     for (const item of rows) {
       await db
         .insert(activities)
@@ -91,9 +95,13 @@ export async function POST() {
             syncedAt: now,
           },
         });
+      if(!analyzed.get(String(item.id))&&streamsAnalyzed<20){
+        const streamResponse=await fetch(`https://www.strava.com/api/v3/activities/${item.id}/streams?keys=time,watts,heartrate,cadence,velocity_smooth,altitude&key_by_type=true`,{headers:{authorization:`Bearer ${accessToken}`}});
+        if(streamResponse.ok){const analysis=analyzeStravaStreams(await streamResponse.json() as never);await db.update(activities).set({powerCurve:JSON.stringify(analysis.powerCurve),maxPower:analysis.maxPower||null,maxHeartRate:analysis.maxHeartRate||null,elevationMeters:analysis.elevationMeters||null,powerZones:JSON.stringify(analysis.powerZones),heartRateZones:JSON.stringify(analysis.heartRateZones),streamAnalyzedAt:now}).where(and(eq(activities.userId,user.userId),eq(activities.provider,"strava"),eq(activities.externalId,String(item.id))));streamsAnalyzed++}
+      }
     }
     await db.update(connections).set({ lastSyncAt: now }).where(eq(connections.id, connection.id));
-    return Response.json({ synced: rows.length });
+    return Response.json({ synced: rows.length, streams_analyzed:streamsAnalyzed });
   } catch (error) {
     if (error instanceof Response) return error;
     return Response.json({ error: "Unable to synchronize Strava" }, { status: 500 });

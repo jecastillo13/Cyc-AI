@@ -27,6 +27,7 @@ export async function GET(request:Request){
       safeZones(row.powerZones).forEach((value,index)=>powerZones[index]+=(value||0)/10);
     }
     const metrics=await getDb().select().from(athleteMetrics).where(and(eq(athleteMetrics.userId,user.userId),gte(athleteMetrics.measuredAt,start))).orderBy(asc(athleteMetrics.measuredAt));
+    const powerCurve=Object.fromEntries(["5","60","300","1200","3600"].map(duration=>[duration,Math.max(0,...raw.map(row=>{try{return (JSON.parse(row.powerCurve||"{}") as Record<string,number>)[duration]||0}catch{return 0}}))]));
     return Response.json({
       period_days:days,source:trainingPeaks.length?"TrainingPeaks":"Strava",
       totals:{activities:rows.length,duration_hours:+(rows.reduce((sum,row)=>sum+row.durationSeconds,0)/3600).toFixed(1),distance_km:+(rows.reduce((sum,row)=>sum+row.distanceMeters,0)/1000).toFixed(1),tss:+rows.reduce((sum,row)=>sum+(row.trainingStressScore||0)/10,0).toFixed(0),energy_kj:rows.reduce((sum,row)=>sum+(row.energyKj||0),0)},
@@ -34,6 +35,7 @@ export async function GET(request:Request){
       weekly:Array.from(weeks,([week,value])=>({week,duration_hours:+(value.duration/3600).toFixed(1),distance_km:+(value.distance/1000).toFixed(1),tss:Math.round(value.tss),energy_kj:value.energy,activities:value.count})),
       sports:Array.from(sports,([sport,value])=>({sport,duration_hours:+(value.duration/3600).toFixed(1),distance_km:+(value.distance/1000).toFixed(1),activities:value.count})),
       zones:{heart_rate:hrZones.map(Math.round),power:powerZones.map(Math.round)},
+      power_curve:powerCurve,
       metrics:metrics.map(metric=>({date:metric.measuredAt.toISOString(),type:metric.metricType,value:metric.value/1000})),
     });
   }catch(error){if(error instanceof Response)return error;console.error("Analytics failed",error);return Response.json({error:"No fue posible calcular la analítica."},{status:500})}

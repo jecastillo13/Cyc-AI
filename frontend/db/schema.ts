@@ -52,6 +52,8 @@ export const activities = sqliteTable("activities", {
   plannedDistanceMeters: integer("planned_distance_meters"),
   heartRateZones: text("heart_rate_zones"),
   powerZones: text("power_zones"),
+  powerCurve: text("power_curve"),
+  streamAnalyzedAt: integer("stream_analyzed_at", { mode: "timestamp_ms" }),
   trainingStressScore: integer("training_stress_score"),
   intensityFactor: integer("intensity_factor"),
   perceivedExertion: integer("perceived_exertion"),
