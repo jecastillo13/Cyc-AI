@@ -9,6 +9,12 @@ type Dashboard = { athlete:{name:string}; history:{workouts_last_7_days:number; 
 type Plan = { weeks:{week:number;target_load:number;sessions:{day:string;session:string;target_load:number}[]}[] };
 type Provider = { id:string;name:string;status:string;description:string;connection:{displayName:string|null;lastSyncAt:string|null}|null };
 
+async function fetchDashboard() {
+  const response = await fetch("/api/dashboard", { cache: "no-store" });
+  if (!response.ok) throw new Error("No fue posible actualizar el panel.");
+  return response.json() as Promise<Dashboard>;
+}
+
 const fallback: Dashboard = {
   athlete:{name:"Ciclista"},
   history:{workouts_last_7_days:8,distance_last_7_days:156.3,load_trend_percent:-7.8},
@@ -27,21 +33,20 @@ export default function Home() {
   const [syncing,setSyncing]=useState("");
 
   useEffect(()=>{
-    fetch(`${API}/dashboard`)
-      .then(async response=>{if(!response.ok)throw new Error();return response.json() as Promise<Dashboard>})
+    fetchDashboard()
       .then(payload=>{setData(payload);setConnected(true)})
       .catch(()=>setConnected(false));
     fetch("/api/me").then(response=>{if(response.status===401){window.location.href="/login";return null}return response.ok?response.json():null}).then(payload=>{if(payload?.user?.displayName)setData(current=>({...current,athlete:{name:payload.user.displayName}}))}).catch(()=>null);
     fetch("/api/integrations").then(response=>response.ok?response.json():null).then(payload=>{if(payload?.providers)setProviders(payload.providers)}).catch(()=>null);
     if(new URLSearchParams(window.location.search).get("connected")==="strava"){
       fetch("/api/integrations/strava/sync",{method:"POST"})
-        .then(async response=>{const payload=await response.json();if(!response.ok)throw new Error(payload.error);setMessage(`${payload.synced} actividades sincronizadas automáticamente desde Strava.`)})
+        .then(async response=>{const payload=await response.json();if(!response.ok)throw new Error(payload.error);setData(await fetchDashboard());setConnected(true);setMessage(`${payload.synced} actividades sincronizadas automáticamente desde Strava.`)})
         .catch(error=>setMessage(error instanceof Error?error.message:"Strava quedó conectado, pero no fue posible sincronizar ahora."))
         .finally(()=>{setSyncing("");window.history.replaceState({},"",window.location.pathname)});
     }
   },[]);
   const generate=async()=>{try{const r=await fetch(`${API}/plan/generate?weeks=1&goal=base`,{method:"POST"});if(!r.ok)throw new Error();setPlan(await r.json())}catch{setMessage("Inicia la API para generar un plan personalizado.")}};
-  const syncStrava=async()=>{setSyncing("strava");try{const response=await fetch("/api/integrations/strava/sync",{method:"POST"});const payload=await response.json();if(!response.ok)throw new Error(payload.error);setMessage(`${payload.synced} actividades sincronizadas desde Strava.`)}catch(error){setMessage(error instanceof Error?error.message:"No fue posible sincronizar Strava")}finally{setSyncing("")}};
+  const syncStrava=async()=>{setSyncing("strava");try{const response=await fetch("/api/integrations/strava/sync",{method:"POST"});const payload=await response.json();if(!response.ok)throw new Error(payload.error);setData(await fetchDashboard());setConnected(true);setMessage(`${payload.synced} actividades sincronizadas desde Strava.`)}catch(error){setMessage(error instanceof Error?error.message:"No fue posible sincronizar Strava")}finally{setSyncing("")}};
   const disconnect=async(provider:string)=>{if(!confirm(`¿Desconectar ${provider}?`))return;const response=await fetch(`/api/integrations?provider=${encodeURIComponent(provider)}`,{method:"DELETE"});if(response.ok)setProviders(current=>current.map(item=>item.id===provider?{...item,connection:null}:item));else setMessage("No fue posible desconectar la aplicación.")};
   const chart=useMemo(()=>data.charts.daily_load.slice(-28),[data]);
   const max=Math.max(...chart.map(x=>x.load),1); const s=data.training_status;
