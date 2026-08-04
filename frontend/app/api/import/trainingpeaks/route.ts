@@ -27,6 +27,8 @@ export async function POST(request: Request) {
         const durationSeconds = Math.round(numberValue(row.TimeTotalInHours) * 3600);
         const distanceMeters = Math.round(numberValue(row.DistanceInMeters));
         const trainingStressScore = Math.round(numberValue(row.TSS) * 10) || null;
+        const heartRateZones = Array.from({length:10},(_,index)=>numberValue(row[`HRZone${index+1}Minutes`])).map(value=>Math.round(value*10));
+        const powerZones = Array.from({length:10},(_,index)=>numberValue(row[`PWRZone${index+1}Minutes`])).map(value=>Math.round(value*10));
         if (durationSeconds < 60 && distanceMeters < 100 && !trainingStressScore) continue;
         const externalId = await fingerprint([row.WorkoutDay, row.Title, row.WorkoutType, row.DistanceInMeters, row.TimeTotalInHours].join("|"));
         await db.insert(activities).values({
@@ -35,6 +37,10 @@ export async function POST(request: Request) {
           startedAt, durationSeconds, distanceMeters,
           elevationMeters: null, averageHeartRate: Math.round(numberValue(row.HeartRateAverage)) || null,
           averagePower: Math.round(numberValue(row.PowerAverage)) || null,
+          maxHeartRate:Math.round(numberValue(row.HeartRateMax))||null,maxPower:Math.round(numberValue(row.PowerMax))||null,
+          averageCadence:Math.round(numberValue(row.CadenceAverage))||null,energyKj:Math.round(numberValue(row.Energy))||null,
+          plannedDurationSeconds:Math.round(numberValue(row.PlannedDuration)*3600)||null,plannedDistanceMeters:Math.round(numberValue(row.PlannedDistanceInMeters))||null,
+          heartRateZones:JSON.stringify(heartRateZones),powerZones:JSON.stringify(powerZones),
           trainingStressScore,
           intensityFactor: Math.round(numberValue(row.IF) * 1000) || null,
           perceivedExertion: Math.round(numberValue(row.Rpe) * 10) || null,
@@ -42,6 +48,9 @@ export async function POST(request: Request) {
         }).onConflictDoUpdate({ target:[activities.provider,activities.externalId], set:{
           durationSeconds,distanceMeters,
           averageHeartRate:Math.round(numberValue(row.HeartRateAverage))||null,averagePower:Math.round(numberValue(row.PowerAverage))||null,
+          maxHeartRate:Math.round(numberValue(row.HeartRateMax))||null,maxPower:Math.round(numberValue(row.PowerMax))||null,
+          averageCadence:Math.round(numberValue(row.CadenceAverage))||null,energyKj:Math.round(numberValue(row.Energy))||null,
+          heartRateZones:JSON.stringify(heartRateZones),powerZones:JSON.stringify(powerZones),
           trainingStressScore,intensityFactor:Math.round(numberValue(row.IF)*1000)||null,syncedAt:new Date(),
         }});
         workoutCount++;
