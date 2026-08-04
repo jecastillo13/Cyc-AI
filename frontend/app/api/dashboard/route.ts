@@ -37,7 +37,6 @@ function cleanAndDedupe(rows: ActivityRow[]) {
   return valid.reduce<ActivityRow[]>((result, row) => {
     const match = result.findIndex(existing => existing.provider !== row.provider && sameWorkout(existing, row));
     if (match < 0) result.push(row);
-    else if (row.provider === "trainingpeaks" && row.trainingStressScore) result[match] = { ...result[match], ...row, elevationMeters: row.elevationMeters || result[match].elevationMeters };
     return result;
   }, []);
 }

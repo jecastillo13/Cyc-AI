@@ -60,12 +60,3 @@ export const activities = sqliteTable("activities", {
   feeling: integer("feeling"),
   syncedAt: integer("synced_at", { mode: "timestamp_ms" }).notNull(),
 }, table => [uniqueIndex("idx_activities_provider_external").on(table.provider, table.externalId)]);
-
-export const athleteMetrics = sqliteTable("athlete_metrics", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  provider: text("provider").notNull(),
-  measuredAt: integer("measured_at", { mode: "timestamp_ms" }).notNull(),
-  metricType: text("metric_type").notNull(),
-  value: integer("value").notNull(),
-}, table => [uniqueIndex("idx_metrics_user_provider_date_type").on(table.userId, table.provider, table.measuredAt, table.metricType)]);

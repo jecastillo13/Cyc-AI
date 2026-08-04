@@ -8,7 +8,6 @@ import { stravaConfig } from "../../server/strava-config";
 const providers=[
   {id:"strava",name:"Strava",status:"available",description:"Ciclismo, carrera y actividades GPS"},
   {id:"garmin",name:"Garmin Connect",status:"planned",description:"Actividad, sueño, HRV y recuperación"},
-  {id:"trainingpeaks",name:"TrainingPeaks",status:"planned",description:"Planes, TSS y entrenamientos"},
   {id:"intervals",name:"Intervals.icu",status:"planned",description:"Carga, fitness y calendario"},
   {id:"fitbit",name:"Fitbit",status:"planned",description:"Actividad, sueño y estado físico"},
 ];
