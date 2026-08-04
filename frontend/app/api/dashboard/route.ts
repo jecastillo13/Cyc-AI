@@ -27,9 +27,12 @@ export async function GET() {
     const start = new Date(today.getTime() - 89 * DAY_MS);
     const rows = await getDb()
       .select({
+        name: activities.name,
+        sportType: activities.sportType,
         startedAt: activities.startedAt,
         durationSeconds: activities.durationSeconds,
         distanceMeters: activities.distanceMeters,
+        elevationMeters: activities.elevationMeters,
       })
       .from(activities)
       .where(andUserAndDate(user.userId, start))
@@ -70,6 +73,8 @@ export async function GET() {
       history: {
         workouts_last_7_days: currentRows.length,
         distance_last_7_days: round(currentRows.reduce((total, row) => total + row.distanceMeters, 0) / 1000),
+        duration_hours_last_7_days: round(currentRows.reduce((total, row) => total + row.durationSeconds, 0) / 3600),
+        elevation_last_7_days: Math.round(currentRows.reduce((total, row) => total + (row.elevationMeters || 0), 0)),
         load_trend_percent: round(loadTrend),
       },
       training_status: {
@@ -83,6 +88,14 @@ export async function GET() {
         injury_risk: fatigue >= 80 || tsb <= -25 ? "high" : fatigue >= 60 || tsb <= -10 ? "moderate" : "low",
       },
       charts: { daily_load: series.slice(-28) },
+      recent_activities: rows.slice(-5).reverse().map((row) => ({
+        name: row.name,
+        sport_type: row.sportType,
+        date: row.startedAt.toISOString(),
+        duration_minutes: Math.round(row.durationSeconds / 60),
+        distance_km: round(row.distanceMeters / 1000),
+        elevation_meters: row.elevationMeters || 0,
+      })),
     });
   } catch (error) {
     if (error instanceof Response) return error;
