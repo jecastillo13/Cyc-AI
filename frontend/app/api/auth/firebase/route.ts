@@ -3,7 +3,7 @@ import { getDb } from "../../../../db";
 import { users } from "../../../../db/schema";
 import { createSession } from "../../../server/current-user";
 
-const FIREBASE_API_KEY="AIzaSyBiy-98OybR5n6GjA-cOjmICjU2kAMtgSg";
+const FIREBASE_API_KEY="AIzaSyBiy-98oybR5n6GjA-cOjmICjU2kAMtgSg";
 type FirebaseAccount={localId:string;email:string;emailVerified:boolean;displayName?:string};
 
 export async function POST(request:Request){

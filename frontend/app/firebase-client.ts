@@ -2,7 +2,7 @@ import { getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBiy-98OybR5n6GjA-cOjmICjU2kAMtgSg",
+  apiKey: "AIzaSyBiy-98oybR5n6GjA-cOjmICjU2kAMtgSg",
   authDomain: "cyc-ai.firebaseapp.com",
   projectId: "cyc-ai",
   storageBucket: "cyc-ai.firebasestorage.app",
