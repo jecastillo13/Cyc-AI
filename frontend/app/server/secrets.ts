@@ -11,7 +11,7 @@ function encryptionKey() {
 
 async function keyFor(salt: Uint8Array) {
   const base = await encryptionKey();
-  return crypto.subtle.deriveKey({ name:"PBKDF2", salt, iterations:120000, hash:"SHA-256" }, base, { name:"AES-GCM", length:256 }, false, ["encrypt","decrypt"]);
+  return crypto.subtle.deriveKey({ name:"PBKDF2", salt, iterations:100000, hash:"SHA-256" }, base, { name:"AES-GCM", length:256 }, false, ["encrypt","decrypt"]);
 }
 
 export async function encryptSecret(value:string) {
