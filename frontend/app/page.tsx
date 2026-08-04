@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnalyticsPanel } from "./components/analytics";
+import { ZoneSettings } from "./components/zone-settings";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
@@ -94,6 +95,7 @@ export default function Home() {
       <section className="panel integrations" id="conexiones"><div className="panel-head"><div><p className="eyebrow">Tus datos, bajo tu control</p><h2>Aplicaciones conectadas</h2><p className="section-copy">Conecta tu cuenta una sola vez. Cyc-AI obtiene tus actividades desde el servicio autorizado; no necesitas subir archivos.</p></div><a className="signout" href="/api/auth/logout">Cerrar sesión</a></div>
         <div className="provider-grid">{(providers.length?providers:[{id:"strava",name:"Strava",status:"available",description:"Ciclismo, carrera y actividades GPS",connection:null},{id:"garmin",name:"Garmin Connect",status:"planned",description:"Actividad, sueño, HRV y recuperación",connection:null},{id:"intervals",name:"Intervals.icu",status:"planned",description:"Carga, fitness y calendario",connection:null}]).map(provider=><article className="provider" key={provider.id}><div className={`provider-mark ${provider.id}`}>{provider.name.slice(0,2).toUpperCase()}</div><div className="provider-body"><h3>{provider.name}</h3><p>{provider.description}</p>{provider.connection&&<small>Conectado como {provider.connection.displayName||"atleta"}</small>}</div>{provider.connection?<div className="connection-actions"><button className="secondary" onClick={()=>provider.id==="strava"&&void syncStrava()}>{syncing===provider.id?"Sincronizando…":"Sincronizar"}</button><button className="disconnect" onClick={()=>void disconnect(provider.id)}>Quitar</button></div>:provider.status==="available"?<a className="secondary" href="/api/oauth/strava/start">Conectar</a>:<span className="soon">{provider.status==="configuration_required"?"Falta configurar":"Próximamente"}</span>}</article>)}</div>
       </section>
+      <ZoneSettings />
       <AnalyticsPanel />
       <footer>Cyc—AI interpreta datos deportivos; no sustituye orientación médica o profesional.</footer>
     </main>

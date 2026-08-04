@@ -8,7 +8,7 @@ export const SESSION_COOKIE = "cyc_session";
 export async function requireApiUser() {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) throw new Response("Unauthorized", { status: 401 });
-  const [row] = await getDb().select({userId:users.id,email:users.email,displayName:users.displayName})
+  const [row] = await getDb().select({userId:users.id,email:users.email,displayName:users.displayName,ftpWatts:users.ftpWatts,thresholdHeartRate:users.thresholdHeartRate,maxHeartRate:users.maxHeartRate,restingHeartRate:users.restingHeartRate,powerZoneLimits:users.powerZoneLimits,heartRateZoneLimits:users.heartRateZoneLimits})
     .from(sessions).innerJoin(users,eq(sessions.userId,users.id))
     .where(and(eq(sessions.tokenHash,await hashToken(token)),gt(sessions.expiresAt,new Date()))).limit(1);
   if (!row) throw new Response("Unauthorized", { status: 401 });

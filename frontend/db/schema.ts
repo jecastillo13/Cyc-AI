@@ -7,6 +7,12 @@ export const users = sqliteTable("users", {
   passwordHash: text("password_hash").notNull(),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+  ftpWatts: integer("ftp_watts"),
+  thresholdHeartRate: integer("threshold_heart_rate"),
+  maxHeartRate: integer("max_heart_rate"),
+  restingHeartRate: integer("resting_heart_rate"),
+  powerZoneLimits: text("power_zone_limits"),
+  heartRateZoneLimits: text("heart_rate_zone_limits"),
 });
 
 export const sessions = sqliteTable("sessions", {
