@@ -5,6 +5,10 @@
   "account_id": "aa4b4af99c703c33b64058b543850270",
   "compatibility_date": "2026-08-03",
   "compatibility_flags": ["nodejs_compat"],
+  "keep_vars": true,
+  "vars": {
+    "STRAVA_CLIENT_ID": "269720"
+  },
   "d1_databases": [
     {
       "binding": "DB",
