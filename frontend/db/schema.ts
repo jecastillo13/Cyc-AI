@@ -50,6 +50,7 @@ export const activities = sqliteTable("activities", {
   elevationMeters: integer("elevation_meters"),
   averageHeartRate: integer("average_heart_rate"),
   averagePower: integer("average_power"),
+  normalizedPower: integer("normalized_power"),
   maxHeartRate: integer("max_heart_rate"),
   maxPower: integer("max_power"),
   averageCadence: integer("average_cadence"),

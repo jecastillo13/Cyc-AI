@@ -60,7 +60,7 @@ export default function Home() {
   return <div className="app-shell">
     <aside className="sidebar">
       <a className="brand" href="#inicio"><span className="brand-mark">C</span><span>Cyc—AI</span></a>
-      <nav><a className="active" href="#inicio">Resumen</a><a href="#carga">Carga</a><a href="#analitica">Analítica</a><a href="#coach">Coach</a><a href="#plan">Plan semanal</a><a href="#conexiones">Conexiones</a></nav>
+      <nav><a className="active" href="#inicio">Resumen</a><a href="#actividades">Actividades</a><a href="#analitica">Analítica</a><a href="#zonas">Zonas</a><a href="#coach">Coach</a><a href="#plan">Plan semanal</a><a href="#conexiones">Conexiones</a></nav>
       <div className="athlete"><span className="avatar">{data.athlete.name.charAt(0)}</span><div><strong>{data.athlete.name}</strong><small>{connected?"Datos sincronizados":"Modo demostración"}</small></div></div>
     </aside>
 
@@ -83,20 +83,21 @@ export default function Home() {
         <article className="panel week"><p className="eyebrow">Últimos 7 días</p><div className="week-number">{data.history.workouts_last_7_days}</div><p>actividades · {data.history.distance_last_7_days.toFixed(0)} km</p><div className="week-details"><span>{(data.history.duration_hours_last_7_days||0).toFixed(1)} h entrenadas</span><span>{data.history.elevation_last_7_days||0} m ascendidos</span></div><div className={`trend ${data.history.load_trend_percent<=0?"good":""}`}>{data.history.load_trend_percent>0?"↑":"↓"} {Math.abs(data.history.load_trend_percent).toFixed(1)}% frente a los 7 días anteriores</div></article>
       </section>
 
+      <section className="panel recent" id="actividades"><div className="panel-head"><div><p className="eyebrow">Detalle sincronizado</p><h2>Actividades recientes</h2></div><small>Datos de Strava</small></div><div className="activity-list">{data.recent_activities?.length?data.recent_activities.map((activity,index)=><article className="activity-row" key={`${activity.date}-${index}`}><div><strong>{activity.name}</strong><small>{new Date(activity.date).toLocaleDateString("es-CO",{day:"numeric",month:"short"})} · {activity.sport_type}</small></div><span>{activity.distance_km.toFixed(1)} km</span><span>{activity.duration_minutes} min</span><span>{activity.elevation_meters} m ↑</span></article>):<p className="empty">Sincroniza Strava para ver tus entrenamientos.</p>}</div></section>
+
+      <AnalyticsPanel />
+      <ZoneSettings />
+
       <section className="grid lower" id="coach">
         <article className="panel coach"><div className="coach-icon">IA</div><div><p className="eyebrow">Coach IA · Cloudflare Workers AI</p><h2>{s.recovery_score>=70?"Buen momento para calidad":"Mantén una carga estable"}</h2><p>{aiAnalysis||"Pide un análisis personalizado de tu carga, recuperación y últimas actividades. La IA usará únicamente los datos visibles de este panel."}</p><button onClick={()=>void askCoach()} disabled={askingAi}>{askingAi?"Analizando tus datos…":"Analizar mis datos con IA →"}</button></div></article>
         <article className="panel balance"><p className="eyebrow">Balance de forma</p><div className="balance-value">{s.tsb>0?"+":""}{s.tsb.toFixed(1)}</div><h3>TSB favorable</h3><p>Valores positivos suelen indicar mayor frescura.</p></article>
       </section>
-      <section className="panel recent"><div className="panel-head"><div><p className="eyebrow">Detalle sincronizado</p><h2>Actividades recientes</h2></div><small>Datos de Strava</small></div><div className="activity-list">{data.recent_activities?.length?data.recent_activities.map((activity,index)=><article className="activity-row" key={`${activity.date}-${index}`}><div><strong>{activity.name}</strong><small>{new Date(activity.date).toLocaleDateString("es-CO",{day:"numeric",month:"short"})} · {activity.sport_type}</small></div><span>{activity.distance_km.toFixed(1)} km</span><span>{activity.duration_minutes} min</span><span>{activity.elevation_meters} m ↑</span></article>):<p className="empty">Sincroniza Strava para ver tus entrenamientos.</p>}</div></section>
-
       <section className="panel plan" id="plan"><div className="panel-head"><div><p className="eyebrow">Siguiente paso</p><h2>Plan semanal adaptable</h2></div><button className="primary" onClick={()=>void generate()}>Generar mi semana</button></div>
         {plan?<div className="sessions">{plan.weeks[0].sessions.map(x=><div className="session" key={x.day}><strong>{x.day.slice(0,3)}</strong><span>{x.session}</span><em>{x.target_load||"—"}</em></div>)}</div>:<p className="empty">Genera una semana según tu recuperación, riesgo y carga actuales.</p>}
       </section>
       <section className="panel integrations" id="conexiones"><div className="panel-head"><div><p className="eyebrow">Tus datos, bajo tu control</p><h2>Aplicaciones conectadas</h2><p className="section-copy">Conecta tu cuenta una sola vez. Cyc-AI obtiene tus actividades desde el servicio autorizado; no necesitas subir archivos.</p></div><a className="signout" href="/api/auth/logout">Cerrar sesión</a></div>
         <div className="provider-grid">{(providers.length?providers:[{id:"strava",name:"Strava",status:"available",description:"Ciclismo, carrera y actividades GPS",connection:null},{id:"garmin",name:"Garmin Connect",status:"planned",description:"Actividad, sueño, HRV y recuperación",connection:null},{id:"intervals",name:"Intervals.icu",status:"planned",description:"Carga, fitness y calendario",connection:null}]).map(provider=><article className="provider" key={provider.id}><div className={`provider-mark ${provider.id}`}>{provider.name.slice(0,2).toUpperCase()}</div><div className="provider-body"><h3>{provider.name}</h3><p>{provider.description}</p>{provider.connection&&<small>Conectado como {provider.connection.displayName||"atleta"}</small>}</div>{provider.connection?<div className="connection-actions"><button className="secondary" onClick={()=>provider.id==="strava"&&void syncStrava()}>{syncing===provider.id?"Sincronizando…":"Sincronizar"}</button><button className="disconnect" onClick={()=>void disconnect(provider.id)}>Quitar</button></div>:provider.status==="available"?<a className="secondary" href="/api/oauth/strava/start">Conectar</a>:<span className="soon">{provider.status==="configuration_required"?"Falta configurar":"Próximamente"}</span>}</article>)}</div>
       </section>
-      <ZoneSettings />
-      <AnalyticsPanel />
       <footer>Cyc—AI interpreta datos deportivos; no sustituye orientación médica o profesional.</footer>
     </main>
   </div>
