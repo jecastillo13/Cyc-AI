@@ -40,7 +40,25 @@ const worker = {
       }, allowedWidths);
     }
 
-    return handler.fetch(request, env, ctx);
+    const response = await handler.fetch(request, env, ctx);
+    const headers = new Headers(response.headers);
+    const isStaticCode = url.pathname.startsWith("/assets/") && /\.(?:js|css)$/.test(url.pathname);
+    const isDocument = request.method === "GET" && (request.headers.get("accept") || "").includes("text/html");
+
+    if (isStaticCode) {
+      // Vinext can reuse the bootstrap filename between deployments. Revalidate
+      // it so a previous immutable bundle never hydrates newer HTML.
+      headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+    } else if (isDocument) {
+      headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      headers.set("Clear-Site-Data", '"cache"');
+    }
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
   },
 };
 
