@@ -25,21 +25,24 @@ export async function POST(request: Request) {
         if (!row.WorkoutDay) continue;
         const startedAt = new Date(`${row.WorkoutDay}T12:00:00Z`);
         const durationSeconds = Math.round(numberValue(row.TimeTotalInHours) * 3600);
+        const distanceMeters = Math.round(numberValue(row.DistanceInMeters));
+        const trainingStressScore = Math.round(numberValue(row.TSS) * 10) || null;
+        if (durationSeconds < 60 && distanceMeters < 100 && !trainingStressScore) continue;
         const externalId = await fingerprint([row.WorkoutDay, row.Title, row.WorkoutType, row.DistanceInMeters, row.TimeTotalInHours].join("|"));
         await db.insert(activities).values({
           userId: user.userId, provider: "trainingpeaks", externalId,
           sportType: row.WorkoutType || "Workout", name: row.Title || row.WorkoutType || "Entrenamiento",
-          startedAt, durationSeconds, distanceMeters: Math.round(numberValue(row.DistanceInMeters)),
+          startedAt, durationSeconds, distanceMeters,
           elevationMeters: null, averageHeartRate: Math.round(numberValue(row.HeartRateAverage)) || null,
           averagePower: Math.round(numberValue(row.PowerAverage)) || null,
-          trainingStressScore: Math.round(numberValue(row.TSS) * 10) || null,
+          trainingStressScore,
           intensityFactor: Math.round(numberValue(row.IF) * 1000) || null,
           perceivedExertion: Math.round(numberValue(row.Rpe) * 10) || null,
           feeling: Math.round(numberValue(row.Feeling) * 10) || null, syncedAt: new Date(),
         }).onConflictDoUpdate({ target:[activities.provider,activities.externalId], set:{
-          durationSeconds,distanceMeters:Math.round(numberValue(row.DistanceInMeters)),
+          durationSeconds,distanceMeters,
           averageHeartRate:Math.round(numberValue(row.HeartRateAverage))||null,averagePower:Math.round(numberValue(row.PowerAverage))||null,
-          trainingStressScore:Math.round(numberValue(row.TSS)*10)||null,intensityFactor:Math.round(numberValue(row.IF)*1000)||null,syncedAt:new Date(),
+          trainingStressScore,intensityFactor:Math.round(numberValue(row.IF)*1000)||null,syncedAt:new Date(),
         }});
         workoutCount++;
       }

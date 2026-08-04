@@ -19,14 +19,38 @@ function exponentialLoad(loads: number[], timeConstant: number) {
   return loads.reduce((current, load) => current + alpha * (load - current), 0);
 }
 
+type ActivityRow = {
+  provider:string;name:string;sportType:string;startedAt:Date;durationSeconds:number;distanceMeters:number;
+  elevationMeters:number|null;trainingStressScore:number|null;intensityFactor:number|null;
+};
+
+function sameWorkout(left: ActivityRow, right: ActivityRow) {
+  if (Math.abs(left.startedAt.getTime() - right.startedAt.getTime()) > 18 * 3_600_000) return false;
+  const durationClose = left.durationSeconds > 0 && right.durationSeconds > 0 && Math.abs(left.durationSeconds-right.durationSeconds)/Math.max(left.durationSeconds,right.durationSeconds) <= .15;
+  const hasDistances = left.distanceMeters > 500 && right.distanceMeters > 500;
+  const distanceClose = hasDistances && Math.abs(left.distanceMeters-right.distanceMeters)/Math.max(left.distanceMeters,right.distanceMeters) <= .08;
+  return durationClose && (!hasDistances || distanceClose);
+}
+
+function cleanAndDedupe(rows: ActivityRow[]) {
+  const valid = rows.filter(row => row.durationSeconds >= 60 || row.distanceMeters >= 100 || (row.trainingStressScore || 0) > 0);
+  return valid.reduce<ActivityRow[]>((result, row) => {
+    const match = result.findIndex(existing => existing.provider !== row.provider && sameWorkout(existing, row));
+    if (match < 0) result.push(row);
+    else if (row.provider === "trainingpeaks" && row.trainingStressScore) result[match] = { ...result[match], ...row, elevationMeters: row.elevationMeters || result[match].elevationMeters };
+    return result;
+  }, []);
+}
+
 export async function GET() {
   try {
     const user = await requireApiUser();
     const now = new Date();
     const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     const start = new Date(today.getTime() - 89 * DAY_MS);
-    const rows = await getDb()
+    const rawRows = await getDb()
       .select({
+        provider: activities.provider,
         name: activities.name,
         sportType: activities.sportType,
         startedAt: activities.startedAt,
@@ -39,6 +63,7 @@ export async function GET() {
       .from(activities)
       .where(andUserAndDate(user.userId, start))
       .orderBy(asc(activities.startedAt));
+    const rows = cleanAndDedupe(rawRows);
 
     const daily = new Map<string, number>();
     for (const row of rows) {
@@ -66,8 +91,9 @@ export async function GET() {
     const previousWeekStart = new Date(today.getTime() - 13 * DAY_MS);
     const currentRows = rows.filter((row) => row.startedAt >= weekStart);
     const previousRows = rows.filter((row) => row.startedAt >= previousWeekStart && row.startedAt < weekStart);
-    const currentLoad = currentRows.reduce((total, row) => total + row.durationSeconds / 60, 0);
-    const previousLoad = previousRows.reduce((total, row) => total + row.durationSeconds / 60, 0);
+    const activityLoad = (row:ActivityRow) => row.trainingStressScore ? row.trainingStressScore / 10 : row.durationSeconds / 60;
+    const currentLoad = currentRows.reduce((total, row) => total + activityLoad(row), 0);
+    const previousLoad = previousRows.reduce((total, row) => total + activityLoad(row), 0);
     const loadTrend = previousLoad > 0 ? ((currentLoad - previousLoad) / previousLoad) * 100 : currentLoad > 0 ? 100 : 0;
 
     return Response.json({
