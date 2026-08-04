@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { FormEvent } from "react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 type Status = { atl:number; ctl:number; tsb:number; fatigue_score:number; recovery_score:number; fitness_score:number; readiness:string; injury_risk:string };
-type RecentActivity = { name:string;sport_type:string;date:string;duration_minutes:number;distance_km:number;elevation_meters:number };
+type RecentActivity = { name:string;sport_type:string;date:string;duration_minutes:number;distance_km:number;elevation_meters:number;tss?:number|null;intensity_factor?:number|null };
 type Dashboard = { athlete:{name:string}; history:{workouts_last_7_days:number;distance_last_7_days:number;duration_hours_last_7_days?:number;elevation_last_7_days?:number;load_trend_percent:number}; training_status:Status; charts:{daily_load:{date:string;load:number}[]};recent_activities?:RecentActivity[] };
 type Plan = { weeks:{week:number;target_load:number;sessions:{day:string;session:string;target_load:number}[]}[] };
 type Provider = { id:string;name:string;status:string;description:string;connection:{displayName:string|null;lastSyncAt:string|null}|null };
@@ -34,6 +35,7 @@ export default function Home() {
   const [syncing,setSyncing]=useState("");
   const [aiAnalysis,setAiAnalysis]=useState("");
   const [askingAi,setAskingAi]=useState(false);
+  const [importing,setImporting]=useState(false);
 
   useEffect(()=>{
     fetchDashboard()
@@ -52,6 +54,7 @@ export default function Home() {
   const syncStrava=async()=>{setSyncing("strava");try{const response=await fetch("/api/integrations/strava/sync",{method:"POST"});const payload=await response.json();if(!response.ok)throw new Error(payload.error);setData(await fetchDashboard());setConnected(true);setMessage(`${payload.synced} actividades sincronizadas desde Strava.`)}catch(error){setMessage(error instanceof Error?error.message:"No fue posible sincronizar Strava")}finally{setSyncing("")}};
   const disconnect=async(provider:string)=>{if(!confirm(`¿Desconectar ${provider}?`))return;const response=await fetch(`/api/integrations?provider=${encodeURIComponent(provider)}`,{method:"DELETE"});if(response.ok)setProviders(current=>current.map(item=>item.id===provider?{...item,connection:null}:item));else setMessage("No fue posible desconectar la aplicación.")};
   const askCoach=async()=>{setAskingAi(true);try{const response=await fetch("/api/coach",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({history:data.history,training_status:data.training_status,recent_activities:data.recent_activities})});const payload=await response.json();if(!response.ok)throw new Error(payload.error);setAiAnalysis(payload.analysis)}catch(error){setAiAnalysis(error instanceof Error?error.message:"No fue posible consultar el Coach IA.")}finally{setAskingAi(false)}};
+  const importTrainingPeaks=async(event:FormEvent<HTMLFormElement>)=>{event.preventDefault();setImporting(true);try{const response=await fetch("/api/import/trainingpeaks",{method:"POST",body:new FormData(event.currentTarget)});const payload=await response.json();if(!response.ok)throw new Error(payload.error);setData(await fetchDashboard());setConnected(true);setMessage(`TrainingPeaks: ${payload.workouts} entrenamientos y ${payload.metrics} métricas importados.`)}catch(error){setMessage(error instanceof Error?error.message:"No fue posible importar TrainingPeaks.")}finally{setImporting(false)}};
   const chart=useMemo(()=>data.charts.daily_load.slice(-28),[data]);
   const max=Math.max(...chart.map(x=>x.load),1); const s=data.training_status;
 
@@ -85,7 +88,8 @@ export default function Home() {
         <article className="panel coach"><div className="coach-icon">IA</div><div><p className="eyebrow">Coach IA · Cloudflare Workers AI</p><h2>{s.recovery_score>=70?"Buen momento para calidad":"Mantén una carga estable"}</h2><p>{aiAnalysis||"Pide un análisis personalizado de tu carga, recuperación y últimas actividades. La IA usará únicamente los datos visibles de este panel."}</p><button onClick={()=>void askCoach()} disabled={askingAi}>{askingAi?"Analizando tus datos…":"Analizar mis datos con IA →"}</button></div></article>
         <article className="panel balance"><p className="eyebrow">Balance de forma</p><div className="balance-value">{s.tsb>0?"+":""}{s.tsb.toFixed(1)}</div><h3>TSB favorable</h3><p>Valores positivos suelen indicar mayor frescura.</p></article>
       </section>
-      <section className="panel recent"><div className="panel-head"><div><p className="eyebrow">Detalle sincronizado</p><h2>Actividades recientes</h2></div><small>Datos obtenidos de Strava</small></div><div className="activity-list">{data.recent_activities?.length?data.recent_activities.map((activity,index)=><article className="activity-row" key={`${activity.date}-${index}`}><div><strong>{activity.name}</strong><small>{new Date(activity.date).toLocaleDateString("es-CO",{day:"numeric",month:"short"})} · {activity.sport_type}</small></div><span>{activity.distance_km.toFixed(1)} km</span><span>{activity.duration_minutes} min</span><span>{activity.elevation_meters} m ↑</span></article>):<p className="empty">Sincroniza Strava para ver aquí tus entrenamientos.</p>}</div></section>
+      <section className="panel recent"><div className="panel-head"><div><p className="eyebrow">Detalle sincronizado</p><h2>Actividades recientes</h2></div><small>Strava y TrainingPeaks</small></div><div className="activity-list">{data.recent_activities?.length?data.recent_activities.map((activity,index)=><article className="activity-row" key={`${activity.date}-${index}`}><div><strong>{activity.name}</strong><small>{new Date(activity.date).toLocaleDateString("es-CO",{day:"numeric",month:"short"})} · {activity.sport_type}</small></div><span>{activity.distance_km.toFixed(1)} km</span><span>{activity.tss!=null?`${activity.tss.toFixed(0)} TSS`:`${activity.duration_minutes} min`}</span><span>{activity.intensity_factor!=null?`IF ${activity.intensity_factor.toFixed(2)}`:`${activity.elevation_meters} m ↑`}</span></article>):<p className="empty">Sincroniza Strava o importa TrainingPeaks para ver tus entrenamientos.</p>}</div></section>
+      <section className="panel tp-import"><div><p className="eyebrow">Importación oficial de tus datos</p><h2>TrainingPeaks</h2><p className="section-copy">Carga los CSV exportados por TrainingPeaks. Cyc-AI conservará TSS, IF, potencia, pulso, RPE, sensación, peso y pulso en reposo.</p></div><form onSubmit={event=>void importTrainingPeaks(event)}><label>Entrenamientos<input name="workouts" type="file" accept=".csv,text/csv" /></label><label>Métricas corporales<input name="metrics" type="file" accept=".csv,text/csv" /></label><button className="primary" disabled={importing}>{importing?"Importando…":"Importar TrainingPeaks"}</button></form><small>Los archivos FIT contienen el detalle segundo a segundo; los añadiremos en la siguiente fase. Para los cálculos actuales usa workouts.csv y metrics.csv.</small></section>
 
       <section className="panel plan" id="plan"><div className="panel-head"><div><p className="eyebrow">Siguiente paso</p><h2>Plan semanal adaptable</h2></div><button className="primary" onClick={()=>void generate()}>Generar mi semana</button></div>
         {plan?<div className="sessions">{plan.weeks[0].sessions.map(x=><div className="session" key={x.day}><strong>{x.day.slice(0,3)}</strong><span>{x.session}</span><em>{x.target_load||"—"}</em></div>)}</div>:<p className="empty">Genera una semana según tu recuperación, riesgo y carga actuales.</p>}

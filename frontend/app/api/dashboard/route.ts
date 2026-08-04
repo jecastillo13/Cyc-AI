@@ -33,6 +33,8 @@ export async function GET() {
         durationSeconds: activities.durationSeconds,
         distanceMeters: activities.distanceMeters,
         elevationMeters: activities.elevationMeters,
+        trainingStressScore: activities.trainingStressScore,
+        intensityFactor: activities.intensityFactor,
       })
       .from(activities)
       .where(andUserAndDate(user.userId, start))
@@ -43,7 +45,7 @@ export async function GET() {
       // Until power/heart-rate zones are available, moving minutes are used as
       // a transparent training-load estimate. The physiological model can
       // later replace this with TSS/TRIMP without changing the API contract.
-      const estimatedLoad = Math.max(0, row.durationSeconds / 60);
+      const estimatedLoad = row.trainingStressScore ? row.trainingStressScore / 10 : Math.max(0, row.durationSeconds / 60);
       const key = dayKey(row.startedAt);
       daily.set(key, (daily.get(key) || 0) + estimatedLoad);
     }
@@ -95,6 +97,8 @@ export async function GET() {
         duration_minutes: Math.round(row.durationSeconds / 60),
         distance_km: round(row.distanceMeters / 1000),
         elevation_meters: row.elevationMeters || 0,
+        tss: row.trainingStressScore ? row.trainingStressScore / 10 : null,
+        intensity_factor: row.intensityFactor ? row.intensityFactor / 1000 : null,
       })),
     });
   } catch (error) {
